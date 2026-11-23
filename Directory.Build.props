@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Version>0.8.0</Version>
+    <Company>Crewlog</Company>
+    <Product>Crewlog</Product>
+    <Copyright>GPL-3.0</Copyright>
+  </PropertyGroup>
+</Project>

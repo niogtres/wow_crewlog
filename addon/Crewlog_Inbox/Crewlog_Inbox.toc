@@ -1,0 +1,7 @@
+## Interface: 16001
+## Title: Crewlog Inbox
+## Notes: Data written by the Crewlog Windows client. Do not edit; it is replaced on every sync.
+## Author: Crewlog
+## Version: 0.8.0
+
+Data.lua

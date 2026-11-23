@@ -1,0 +1,16 @@
+# Normalize line endings in the repo; check out with the platform default.
+* text=auto
+
+# The addon and its tooling keep LF everywhere (WoW reads either; diffs stay clean).
+*.lua text eol=lf
+*.toc text eol=lf
+*.sh  text eol=lf
+
+# Windows-only files
+*.ps1  text eol=crlf
+*.slnx text eol=crlf
+
+# Binary
+*.png binary
+*.ico binary
+*.tga binary

@@ -1,0 +1,39 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+publish/
+*.nupkg
+
+# IDEs
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Local env / secrets
+.env
+*.env.local
+appsettings.Development.local.json
+
+# Captured game files (may contain personal data)
+fixtures/private/
+*.bak
+
+# Scratch images and drafts
+temp/
+
+# Build output
+dist/
+
+# IDE user files
+*.csproj.user
+
+# Local caches and generated data
+.cache/
+/data/
+
+# Server backups and secrets
+deploy/backups/

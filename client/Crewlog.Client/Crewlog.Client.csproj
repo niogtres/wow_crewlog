@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>Crewlog</AssemblyName>
+    <RootNamespace>Crewlog.Client</RootNamespace>
+    <ApplicationIcon>..\..\docs\brand\icons\crewlog.ico</ApplicationIcon>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+  </PropertyGroup>
+
+  <!-- Self-contained single file for friends (DESIGN §7 / question 6): dotnet publish -c Release -r win-x64 -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\docs\brand\icons\crewlog.ico" LogicalName="crewlog.ico" />
+    <EmbeddedResource Include="..\..\docs\brand\icons\icon-192.png" LogicalName="emblem.png" />
+    <EmbeddedResource Include="..\..\docs\brand\icons\crewlog-tray.ico" LogicalName="tray.ico" />
+  </ItemGroup>
+
+  <!-- The addon ships inside the exe so a fresh install can set it up immediately, even offline.
+       Packed from addon/ on every build; the server's release can still offer a newer one. -->
+  <ItemGroup>
+    <AddonCore Include="..\..\addon\Crewlog\**\*" />
+    <AddonInbox Include="..\..\addon\Crewlog_Inbox\**\*" />
+  </ItemGroup>
+  <Target Name="PackEmbeddedAddon" BeforeTargets="BeforeBuild">
+    <PropertyGroup>
+      <AddonPackDir>$(ProjectDir)$(IntermediateOutputPath)addon-pack</AddonPackDir>
+      <AddonZip>$(ProjectDir)$(IntermediateOutputPath)addon.zip</AddonZip>
+    </PropertyGroup>
+    <RemoveDir Directories="$(AddonPackDir)" />
+    <Copy SourceFiles="@(AddonCore)" DestinationFolder="$(AddonPackDir)\Crewlog\%(RecursiveDir)" />
+    <Copy SourceFiles="@(AddonInbox)" DestinationFolder="$(AddonPackDir)\Crewlog_Inbox\%(RecursiveDir)" />
+    <ZipDirectory SourceDirectory="$(AddonPackDir)" DestinationFile="$(AddonZip)" Overwrite="true" />
+    <ItemGroup>
+      <EmbeddedResource Include="$(AddonZip)" LogicalName="addon.zip" />
+    </ItemGroup>
+  </Target>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crewlog.Client.Core\Crewlog.Client.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Velopack" Version="1.2.161" />
+  </ItemGroup>
+
+</Project>

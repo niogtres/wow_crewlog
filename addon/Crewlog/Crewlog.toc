@@ -1,0 +1,22 @@
+## Interface: 16001
+## Title: Crewlog
+## Notes: Shared quest journal for you and your crew. Syncs through the Crewlog Windows client.
+## Author: Crewlog
+## Version: 0.8.0
+## IconTexture: Interface\AddOns\Crewlog\media\minimap
+## SavedVariables: CrewlogDB
+## OptionalDeps: Crewlog_Inbox
+## AddonCompartmentFunc: Crewlog_OnAddonCompartmentClick
+## AddonCompartmentFuncOnEnter: Crewlog_OnAddonCompartmentEnter
+## AddonCompartmentFuncOnLeave: Crewlog_OnAddonCompartmentLeave
+
+Util.lua
+Store.lua
+Harvest.lua
+Collector.lua
+Live.lua
+Crew.lua
+Next.lua
+Tooltips.lua
+UI.lua
+Core.lua

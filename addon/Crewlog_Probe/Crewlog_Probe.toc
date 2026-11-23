@@ -1,0 +1,8 @@
+## Interface: 16001
+## Title: Crewlog Probe
+## Notes: One-time API check for Crewlog. Type /crewprobe, play a little, then /reload. Delete afterwards.
+## Author: Crewlog
+## Version: 0.0.1
+## SavedVariables: Crewlog_ProbeDB
+
+Probe.lua
