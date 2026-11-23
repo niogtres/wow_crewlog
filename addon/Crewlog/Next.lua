@@ -48,10 +48,9 @@ function Next.lines(data, myGuid, uiMap)
         out[#out + 1] = string.format("  %s✓ %s  in your log|r", MUTED, q.title or q.id)
       else
         out[#out + 1] = "  " .. (q.soon and SOON or WHITE) .. title .. "|r" .. (q.soon and (SOON .. "  soon|r") or "")
-        local detail = {}
-        if q.giver then detail[#detail + 1] = q.giver end
-        if q.why then detail[#detail + 1] = q.why end
-        if #detail > 0 then out[#out + 1] = "      " .. MUTED .. table.concat(detail, " · ") .. "|r" end
+        -- separate short lines: a wrapped line would lose its indent
+        if q.giver then out[#out + 1] = "      " .. MUTED .. q.giver .. "|r" end
+        if q.why then out[#out + 1] = "      " .. MUTED .. q.why .. "|r" end
       end
     end
   end

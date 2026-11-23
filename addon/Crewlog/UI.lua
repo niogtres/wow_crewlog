@@ -63,10 +63,80 @@ function UI.Tooltip(tt)
   tt:AddLine(MUTED .. "Last data from the app: " .. ago(db.lastInbox ~= 0 and db.lastInbox or nil))
   Crew.tooltip(tt, guid)
   tt:AddLine(" ")
-  tt:AddLine(GOLD .. "Click|r to sync (reloads your UI briefly)", 1, 1, 1)
-  tt:AddLine(GOLD .. "Shift-click|r to sync without asking", 1, 1, 1)
-  tt:AddLine(GOLD .. "Right-click|r for your journal crew", 1, 1, 1)
+  tt:AddLine(GOLD .. "Click|r for the menu: sync, crew, next up, options", 1, 1, 1)
+  tt:AddLine(GOLD .. "Shift-click|r to sync right away", 1, 1, 1)
+  tt:AddLine(GOLD .. "Right-click|r for your crew", 1, 1, 1)
   tt:AddLine(MUTED .. "Drag to move · logging out syncs too")
+end
+
+-- The compass menu: everything /cl can do, one click away ---------------------------------------
+
+-- What the menu offers, in order. Checkboxes carry isOn; the rest just run.
+function UI.MenuItems()
+  local Live, guid = ns.Live, ns.Collector.guid
+  return {
+    { text = "Sync now", hint = "reloads your UI for a moment", run = function() UI.Sync(true) end },
+    { text = "Crew", run = function() Crew.Show(guid(), "crew") end },
+    { text = "Next up", run = function() Crew.Show(guid(), "next") end },
+    { text = "Member colours", isOn = function() return db.ui.colors == true end, run = function() Live.setColors(not db.ui.colors) end },
+    { text = "Markers over party", isOn = function() return db.ui.markers == true end,
+      run = function()
+        local ok, why = Live.setMarkers(not db.ui.markers)
+        if not ok then say("can't change markers " .. why) end
+      end },
+    { text = "Hide minimap button", hint = "/cl minimap brings it back", run = function()
+        UI.SetMinimapShown(false)
+        say("minimap button hidden. |cffF2C25B/cl minimap|r shows it again.")
+      end },
+  }
+end
+
+local menuFrame
+-- The game's own context menu where it exists (modern client), else a small menu of our own.
+function UI.Menu(anchor)
+  local items = UI.MenuItems()
+  if MenuUtil and MenuUtil.CreateContextMenu then
+    MenuUtil.CreateContextMenu(anchor, function(_, root)
+      root:CreateTitle("Crewlog")
+      for _, it in ipairs(items) do
+        if it.isOn then root:CreateCheckbox(it.text, it.isOn, it.run)
+        else root:CreateButton(it.text, it.run) end
+      end
+    end)
+    return "native"
+  end
+  if not menuFrame then
+    menuFrame = CreateFrame("Frame", "CrewlogMenu", UIParent, "TooltipBackdropTemplate")
+    menuFrame:SetFrameStrata("DIALOG")
+    menuFrame:SetClampedToScreen(true)
+    menuFrame:EnableMouse(true)
+    menuFrame.buttons = {}
+    tinsert(UISpecialFrames, "CrewlogMenu") -- Escape closes it
+    local title = menuFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    title:SetPoint("TOPLEFT", 12, -10)
+    title:SetText("Crewlog")
+  end
+  for i, it in ipairs(items) do
+    local b = menuFrame.buttons[i]
+    if not b then
+      b = CreateFrame("Button", nil, menuFrame)
+      b:SetSize(200, 20)
+      b:SetPoint("TOPLEFT", 10, -10 - i * 20)
+      b:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+      b.label = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+      b.label:SetPoint("LEFT", 4, 0)
+      menuFrame.buttons[i] = b
+    end
+    b.label:SetText((it.isOn and ((it.isOn() and "|cff6DCFC4[x]|r " or "|cff8FA39C[ ]|r ")) or "") .. it.text
+      .. (it.hint and (" |cff8FA39C(" .. it.hint .. ")|r") or ""))
+    b:SetScript("OnClick", function() menuFrame:Hide(); it.run() end)
+    b:Show()
+  end
+  menuFrame:SetSize(250, 20 + (#items + 1) * 20)
+  menuFrame:ClearAllPoints()
+  menuFrame:SetPoint("TOPRIGHT", anchor, "BOTTOMLEFT", 0, 0)
+  menuFrame:Show()
+  return "own", menuFrame
 end
 
 -- Minimap button ---------------------------------------------------------------------------
@@ -92,9 +162,10 @@ local function createMinimapButton()
   icon:SetTexture(ICON)
   button:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
 
-  button:SetScript("OnClick", function(_, mouse)
-    if mouse == "RightButton" then Crew.Toggle(ns.Collector.guid()) return end
-    UI.Sync(IsShiftKeyDown and IsShiftKeyDown())
+  button:SetScript("OnClick", function(self, mouse)
+    if mouse == "RightButton" then Crew.Toggle(ns.Collector.guid(), "crew") return end
+    if IsShiftKeyDown and IsShiftKeyDown() then UI.Sync(true) return end
+    UI.Menu(self)
   end)
   button:SetScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_LEFT")
@@ -117,9 +188,10 @@ local function createMinimapButton()
 end
 
 -- Addon compartment (modern client's addon dropdown); the TOC points here.
-function Crewlog_OnAddonCompartmentClick(_, mouse)
-  if mouse == "RightButton" then Crew.Toggle(ns.Collector.guid()) return end
-  UI.Sync(IsShiftKeyDown and IsShiftKeyDown())
+function Crewlog_OnAddonCompartmentClick(_, mouse, menuButton)
+  if mouse == "RightButton" then Crew.Toggle(ns.Collector.guid(), "crew") return end
+  if IsShiftKeyDown and IsShiftKeyDown() then UI.Sync(true) return end
+  UI.Menu(menuButton or button or UIParent)
 end
 
 function Crewlog_OnAddonCompartmentEnter(_, menuButton)

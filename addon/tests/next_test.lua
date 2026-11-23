@@ -87,5 +87,30 @@ check(win and win.text and win.text.text and win.text.text:find("Next up in Duro
 SlashCmdList.CREWLOG("")
 check(win.text.text:find("Tuesday crew", 1, true), "/cl switches to the crew tab")
 
+-- 5. Clicking the compass opens a menu with everything /cl can do.
+local db = CrewlogDB
+local items = ns.UI.MenuItems()
+local names = {}
+for _, it in ipairs(items) do names[#names + 1] = it.text end
+check(table.concat(names, ",") == "Sync now,Crew,Next up,Member colours,Markers over party,Hide minimap button", "menu items: " .. table.concat(names, ","))
+local kind, frame = ns.UI.Menu(UIParent)                       -- no MenuUtil in the harness: our own menu
+check(kind == "own" and frame and #frame.buttons == 6, "fallback menu with six entries")
+frame.buttons[4].scripts.OnClick()                               -- Member colours
+check(db.ui.colors == true, "menu toggles member colours")
+frame.buttons[1].scripts.OnClick()                               -- Sync now
+check(H.reloads == 1, "menu Sync now reloads straight away")
+local built = {}
+MenuUtil = { CreateContextMenu = function(_, gen)
+  gen(nil, { CreateTitle = function(_, t) built[#built + 1] = "title:" .. t end,
+             CreateButton = function(_, t) built[#built + 1] = "button:" .. t end,
+             CreateCheckbox = function(_, t, isOn) built[#built + 1] = "check:" .. t .. ":" .. tostring(isOn()) end })
+end }
+check(ns.UI.Menu(UIParent) == "native", "the game's own menu when it exists")
+check(built[1] == "title:Crewlog" and built[5] == "check:Member colours:true" and built[6] == "check:Markers over party:false", "native menu: title, buttons, checkboxes with state")
+MenuUtil = nil
+GameTooltip.lines = {}
+ns.UI.Tooltip(GameTooltip)
+check(table.concat(GameTooltip.lines, "\n"):find("for the menu", 1, true), "tooltip explains the click")
+
 print(string.format("%d passed, %d failed", passed, failed))
 if failed > 0 then os.exit(1) end

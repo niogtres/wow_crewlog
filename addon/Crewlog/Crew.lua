@@ -171,7 +171,7 @@ end
 local win
 local function build()
   win = CreateFrame("Frame", "CrewlogCrewFrame", UIParent, "BasicFrameTemplateWithInset")
-  win:SetSize(440, 420)
+  win:SetSize(520, 460)
   win:SetPoint("CENTER")
   win:SetMovable(true)
   win:EnableMouse(true)
@@ -197,11 +197,11 @@ local function build()
   scroll:SetPoint("TOPLEFT", 12, -56)
   scroll:SetPoint("BOTTOMRIGHT", -30, 34)
   local body = CreateFrame("Frame", nil, scroll)
-  body:SetSize(390, 10)
+  body:SetSize(470, 10)
   scroll:SetScrollChild(body)
   win.text = body:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   win.text:SetPoint("TOPLEFT")
-  win.text:SetWidth(390)
+  win.text:SetWidth(470)
   win.text:SetJustifyH("LEFT")
   win.text:SetSpacing(3)
   win.body = body
@@ -216,9 +216,11 @@ function Crew.Show(myGuid, mode)
   if not win then build() end
   win.guid = myGuid
   win.mode = mode or win.mode or "crew"
+  -- The active tab is lit (a disabled button would look greyed out, i.e. inactive).
   for name, b in pairs(win.tabs or {}) do
-    if b.SetEnabled then b:SetEnabled(name ~= win.mode) end -- the active tab is the one you can't click
+    if name == win.mode then b:LockHighlight() else b:UnlockHighlight() end
   end
+  if type(win.TitleText) == "table" then win.TitleText:SetText(win.mode == "next" and "Crewlog · Next up" or "Crewlog · Crew") end
   local data = inbox()
   local lines = win.mode == "next" and ns.Next.currentLines(myGuid)
     or Crew.lines(data, myGuid, Crew.myQuests(), ns.Live and ns.Live.list() or {})
