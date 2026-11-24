@@ -121,7 +121,12 @@ public static class InboxWriter
                         sb.Append("      { n = ").Append(st.N)
                           .Append(", x = ").Append(st.X.ToString("0.#", CultureInfo.InvariantCulture))
                           .Append(", y = ").Append(st.Y.ToString("0.#", CultureInfo.InvariantCulture))
-                          .Append(", place = ").Append(Str(st.Place)).Append(", tasks = { ")
+                          .Append(", place = ").Append(Str(st.Place));
+                        if (st.CityMap is { } cm && st.CityX is { } cx && st.CityY is { } cy)
+                            sb.Append(", cityMap = ").Append(cm)
+                              .Append(", cx = ").Append(cx.ToString("0.#", CultureInfo.InvariantCulture))
+                              .Append(", cy = ").Append(cy.ToString("0.#", CultureInfo.InvariantCulture));
+                        sb.Append(", tasks = { ")
                           .Append(string.Join(", ", st.Tasks.Select(Str))).AppendLine(" } },");
                     }
                     sb.Append("    } }");

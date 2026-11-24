@@ -92,11 +92,11 @@ function CrewlogRoutePinMixin:OnLoad()
   self:SetScript("OnLeave", self.OnMouseLeave)
 end
 
-function CrewlogRoutePinMixin:OnAcquired(stop)
+function CrewlogRoutePinMixin:OnAcquired(stop, x, y)
   if not self.label then self:OnLoad() end
   self.stop = stop
   self.label:SetText(stop.n)
-  self:SetPosition(stop.x / 100, stop.y / 100)
+  self:SetPosition((x or stop.x) / 100, (y or stop.y) / 100)
 end
 
 function CrewlogRoutePinMixin:OnMouseEnter()
@@ -105,7 +105,8 @@ function CrewlogRoutePinMixin:OnMouseEnter()
   GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
   GameTooltip:AddLine(GOLD .. s.n .. ".|r " .. (s.place or ""), 1, 1, 1)
   for _, t in ipairs(s.tasks or {}) do GameTooltip:AddLine(t, 0.9, 0.93, 0.92, true) end
-  GameTooltip:AddLine(MUTED .. string.format("%.1f, %.1f · Crewlog route|r", s.x, s.y))
+  local x, y = s.cx or s.x, s.cy or s.y
+  GameTooltip:AddLine(MUTED .. string.format("%.1f, %.1f · Crewlog route|r", x, y))
   GameTooltip:Show()
 end
 
@@ -148,9 +149,18 @@ local function makeProvider()
     self:RemoveAllData()
     local r = Route.current()
     local map = self:GetMap()
-    if not r or map:GetMapID() ~= r.map then return end
-    drawLines(map, r.stops)
-    for _, s in ipairs(r.stops) do map:AcquirePin(TEMPLATE, s) end
+    if not r then return end
+    local id = map:GetMapID()
+    if id == r.map then
+      -- The route's zone: every stop (one in a capital beyond the map's edge sits at the edge) and the line.
+      drawLines(map, r.stops)
+      for _, s in ipairs(r.stops) do map:AcquirePin(TEMPLATE, s) end
+    else
+      -- A capital's own map (Orgrimmar from Durotar's route): the stops in it, where they really are.
+      for _, s in ipairs(r.stops) do
+        if s.cityMap == id and s.cx and s.cy then map:AcquirePin(TEMPLATE, s, s.cx, s.cy) end
+      end
+    end
   end
   function p:OnMapChanged() self:RefreshAllData() end
   return p

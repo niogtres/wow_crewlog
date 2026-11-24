@@ -86,8 +86,10 @@ public sealed record InboxJournal(string Title, IReadOnlyList<InboxToon> Toons, 
 /// <summary>The journal's suggested route (the website's route map) for the in-game world map: stops in one zone.</summary>
 public sealed record InboxRoute(int UiMapId, string Zone, IReadOnlyList<InboxStop> Stops);
 
-/// <summary>A route stop: number, zone coordinates (0–100), the place, and what to do there (one line per task).</summary>
-public sealed record InboxStop(int N, double X, double Y, string Place, IReadOnlyList<string> Tasks);
+/// <summary>A route stop: number, zone coordinates (0–100), the place, and what to do there (one line per task).
+/// A stop in a capital beyond the zone's map edge also carries the city's map and its coordinates there.</summary>
+public sealed record InboxStop(int N, double X, double Y, string Place, IReadOnlyList<string> Tasks,
+    int? CityMap = null, double? CityX = null, double? CityY = null);
 
 public sealed record InboxToon(string Guid, string Name, string OwnerName, int? Level, string? Class, string? Zone, bool Mine,
     IReadOnlyList<InboxQuest> Quests, DateTimeOffset UpdatedAt, IReadOnlyList<int>? Done = null);

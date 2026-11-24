@@ -28,7 +28,7 @@ public class InboxWriterTests
                 ], [new InboxPick(790, "Sarkoth", 5, "Brogg, Ashka", "Hana'zua · Durotar (40.6, 62.6)")],
                 new InboxRoute(1411, "Durotar", [
                     new InboxStop(1, 42.9, 69.24, "Zureetha Fargaze", ["Pick up Vile Familiars (Brögg)"]),
-                    new InboxStop(2, 45, 56, "Vile Familiar", ["Vile Familiar for Vile Familiars", "Turn in Sarkoth"]),
+                    new InboxStop(2, 45, 56, "Vile Familiar", ["Vile Familiar for Vile Familiars", "Turn in Sarkoth"], 1454, 80.77, 23.7),
                 ])),
             ],
             [new InboxNext("Player-1-A", 14, 1411, "Durotar", [new InboxSuggestion(792, "Vile Familiars", 4, true, "unlocks 1 more", "Zureetha Fargaze")])]);
@@ -59,6 +59,9 @@ public class InboxWriterTests
             var stops = route["stops"].AsTable()!;
             Assert.Equal("Zureetha Fargaze", stops[1].AsTable()!["place"].AsString());
             Assert.Contains("x = 42.9, y = 69.2", File.ReadAllText(path));               // invariant decimals, one place
+            Assert.Equal(1454, stops[2].AsTable()!["cityMap"].AsInt());                 // a stop in Orgrimmar, off Durotar's map
+            Assert.Contains("cx = 80.8, cy = 23.7", File.ReadAllText(path));
+            Assert.True(stops[1].AsTable()!["cityMap"].IsNil);
             Assert.Equal("Turn in Sarkoth", stops[2].AsTable()!["tasks"].AsTable()![2].AsString());
             var next = inbox["next"].AsTable()![1].AsTable()!;
             Assert.Equal(1411, next["uiMap"].AsInt());
