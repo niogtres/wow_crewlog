@@ -20,7 +20,8 @@ public sealed record AddonSave(
     IReadOnlyList<HarvestedQuest> Harvest,
     long DroppedEvents);
 
-/// <summary>A character's current state. Identity is the player GUID (Forever returns an empty realm name).</summary>
+/// <summary>A character's current state. Identity is the player GUID (Forever returns an empty realm name).
+/// Pos* (addon 0.8.6+): where the toon stood when the game last saved, zone map id and 0–100 coordinates.</summary>
 public sealed record CharacterSnapshot(
     string Guid,
     string? Name,
@@ -36,7 +37,10 @@ public sealed record CharacterSnapshot(
     long Seq,
     IReadOnlyList<int> Completed,
     string? CompletedHash,
-    IReadOnlyList<LogQuest> Log);
+    IReadOnlyList<LogQuest> Log,
+    int? PosMapId = null,
+    double? PosX = null,
+    double? PosY = null);
 
 public sealed record LogQuest(int QuestId, string? Title, int? Level, IReadOnlyList<ObjectiveState> Objectives);
 

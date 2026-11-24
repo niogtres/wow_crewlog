@@ -18,6 +18,11 @@ CrewlogDB = {
 			},
 			["map"] = 1412,
 			["name"] = "Zarnokk",
+			["pos"] = {
+				["map"] = 1411,
+				["x"] = 43.2,
+				["y"] = 68.7,
+			},
 			["race"] = "Troll",
 			["raceId"] = 8,
 			["realmId"] = 6949,

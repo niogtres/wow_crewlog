@@ -180,6 +180,12 @@ SlashCmdList.CREWLOG("status")
 SlashCmdList.CREWLOG("debug")
 check(#H.chat >= 4, "slash output")
 
+st.map, st.pos = 1411, { 0.4323, 0.6871 }
+H.fire("PLAYER_LEAVING_WORLD")
+do
+  local p = db.chars[st.guid].pos
+  check(p and p.map == 1411 and p.x == 43.2 and p.y == 68.7, "position saved for the route map (0-100)")
+end
 H.fire("PLAYER_LOGOUT")
 
 -- Fixtures for the .NET parser (two serializer styles).

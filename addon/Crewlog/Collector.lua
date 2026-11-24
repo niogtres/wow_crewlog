@@ -170,5 +170,20 @@ C.handlers = {
     local rec = S.char(db, guid)
     rec.lastSeen = U.now()
   end,
+
+  -- Where the toon stands when the game saves (a /reload, which is what Sync does, or logging out), for the
+  -- website's route map: zone map id plus 0-100 coordinates, the same scale as quest data.
+  PLAYER_LEAVING_WORLD = function()
+    local rec = S.char(db, guid)
+    local map = C_Map.GetBestMapForUnit("player")
+    local pos = map and C_Map.GetPlayerMapPosition(map, "player")
+    local x, y
+    if pos and pos.GetXY then x, y = pos:GetXY() end
+    if x and y and (x > 0 or y > 0) then
+      rec.pos = { map = map, x = math.floor(x * 1000 + 0.5) / 10, y = math.floor(y * 1000 + 0.5) / 10 }
+    else
+      rec.pos = nil -- inside an instance or no position: say nothing rather than something old
+    end
+  end,
 }
 C.handlers.UNIT_QUEST_LOG_CHANGED = function(unit) if unit == "player" then C.handlers.QUEST_LOG_UPDATE() end end

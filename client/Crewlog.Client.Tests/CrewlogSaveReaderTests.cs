@@ -30,6 +30,7 @@ public class CrewlogSaveReaderTests
         Assert.Equal((8, 4), (c.RaceId, c.ClassId));
         Assert.Equal(2, c.Level);
         Assert.Equal(1412, c.MapId);
+        Assert.Equal((1411, 43.2, 68.7), (c.PosMapId, c.PosX, c.PosY)); // where the toon stood at the last save (route map)
         Assert.Equal(11, c.Seq);
         Assert.Equal([788, 3911, 4641], c.Completed);
         Assert.Empty(c.Log);
