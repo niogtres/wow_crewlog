@@ -1,0 +1,11 @@
+name: Idea
+description: Something Crewlog could do
+labels: [idea]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help you, and when?
+      description: Describe the situation in game, not only the feature.
+    validations:
+      required: true

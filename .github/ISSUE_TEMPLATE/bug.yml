@@ -1,0 +1,28 @@
+name: Something doesn't work
+description: A problem with the addon, the Windows app or the website
+labels: [bug]
+body:
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options: [In game (addon), Windows app, Website]
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+      description: Screenshots help. Please leave out passwords, invite keys and anything else private.
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Point at the compass by the clock for the app version; `/cl status` in game shows the addon's.
+      placeholder: app 0.8.1, addon 0.8.1
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to make it happen again
