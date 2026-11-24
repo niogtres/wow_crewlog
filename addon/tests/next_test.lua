@@ -36,12 +36,16 @@ Crewlog_Inbox = {
       toons = {
         { guid = "Player-1-BROGG", name = "Brogg", quests = { { id = 789, title = "Sting of the Scorpid", done = 1, total = 3 } } },
         { guid = "Player-1-ASHKA", name = "Ashka", doneIds = { 788, 789 }, quests = {} },
+        { guid = me, name = "Zarnokk", mine = true, quests = {} },
       },
       together = { { id = 790, title = "Sarkoth", level = 5, who = "Brogg, Ashka", giver = "Hana'zua" } },
       route = { map = 1411, zone = "Durotar", stops = {
         { n = 1, x = 42.9, y = 69.2, place = "Zureetha Fargaze", tasks = { "Pick up Vile Familiars (Brogg)" } },
         { n = 2, x = 45.1, y = 56.0, place = "Vile Familiar", tasks = { "Vile Familiar for Vile Familiars (Brogg, Ashka)" } },
       } } },
+    { title = "Other toon's journal",                            -- this toon isn't in it: no route choice
+      toons = { { guid = "Player-1-BROGG", name = "Brogg", quests = {} }, { guid = "Player-1-MYALT", name = "Alt", mine = true, quests = {} } },
+      route = { map = 1411, zone = "Durotar", stops = { { n = 1, x = 50, y = 50, place = "Somewhere", tasks = { "x" } } } } },
   },
 }
 
@@ -99,6 +103,7 @@ for _, it in ipairs(items) do names[#names + 1] = it.text end
 check(table.concat(names, ",") == "Sync now,Crew,Next up,Route on map,Member colours,Markers over party,Hide minimap button", "menu items: " .. table.concat(names, ","))
 local kind, frame = ns.UI.Menu(UIParent)                       -- no MenuUtil in the harness: our own menu
 check(kind == "own" and frame and #frame.buttons == 7, "fallback menu with seven entries (route choices inline)")
+check(#ns.Route.journals() == 1 and ns.Route.journals()[1].title == "Tuesday crew", "only journals this toon is in offer a route")
 check(frame.buttons[4].label.text:find("Route on map: Tuesday crew", 1, true) and frame.buttons[4].label.text:find("2 stops in Durotar", 1, true),
   "fallback menu offers the journal's route")
 frame.buttons[4].scripts.OnClick()                               -- Route on map: Tuesday crew

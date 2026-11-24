@@ -13,11 +13,19 @@ local db, provider
 local function say(msg) DEFAULT_CHAT_FRAME:AddMessage(GOLD .. "[Crewlog]|r " .. msg) end
 local function inbox() return rawget(_G, "Crewlog_Inbox") end
 
---- Journals that came with a route from the app: { { title, route }, ... }.
+local function hasToon(j, guid)
+  for _, t in ipairs(j.toons or {}) do
+    if t.guid == guid then return true end
+  end
+  return false
+end
+
+--- Journals the toon you're playing is in that came with a route from the app: { { title, route }, ... }.
 function Route.journals()
   local list = {}
+  local me = ns.Collector and ns.Collector.guid()
   for _, j in ipairs((inbox() or {}).journals or {}) do
-    if j.route and j.route.stops and #j.route.stops > 0 then list[#list + 1] = { title = j.title, route = j.route } end
+    if j.route and j.route.stops and #j.route.stops > 0 and hasToon(j, me) then list[#list + 1] = { title = j.title, route = j.route } end
   end
   return list
 end
