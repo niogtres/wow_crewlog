@@ -14,7 +14,7 @@ H.addQuest(789, "Sting of the Scorpid", 3, { { 2, 10, false, "item", "Scorpid Wo
 st.map = 1411 -- Durotar
 CrewlogDB = nil
 
-local ns = H.load("Crewlog", { "Util.lua", "Store.lua", "Harvest.lua", "Collector.lua", "Live.lua", "Crew.lua", "Next.lua", "Tooltips.lua", "Way.lua", "UI.lua", "Core.lua" })
+local ns = H.load("Crewlog", { "Util.lua", "Store.lua", "Harvest.lua", "Collector.lua", "Live.lua", "Crew.lua", "Next.lua", "Tooltips.lua", "Way.lua", "Route.lua", "UI.lua", "Core.lua" })
 H.fire("ADDON_LOADED", "Crewlog")
 H.fire("PLAYER_LOGIN")
 H.advance(1)
@@ -37,7 +37,11 @@ Crewlog_Inbox = {
         { guid = "Player-1-BROGG", name = "Brogg", quests = { { id = 789, title = "Sting of the Scorpid", done = 1, total = 3 } } },
         { guid = "Player-1-ASHKA", name = "Ashka", doneIds = { 788, 789 }, quests = {} },
       },
-      together = { { id = 790, title = "Sarkoth", level = 5, who = "Brogg, Ashka", giver = "Hana'zua" } } },
+      together = { { id = 790, title = "Sarkoth", level = 5, who = "Brogg, Ashka", giver = "Hana'zua" } },
+      route = { map = 1411, zone = "Durotar", stops = {
+        { n = 1, x = 42.9, y = 69.2, place = "Zureetha Fargaze", tasks = { "Pick up Vile Familiars (Brogg)" } },
+        { n = 2, x = 45.1, y = 56.0, place = "Vile Familiar", tasks = { "Vile Familiar for Vile Familiars (Brogg, Ashka)" } },
+      } } },
   },
 }
 
@@ -92,21 +96,34 @@ local db = CrewlogDB
 local items = ns.UI.MenuItems()
 local names = {}
 for _, it in ipairs(items) do names[#names + 1] = it.text end
-check(table.concat(names, ",") == "Sync now,Crew,Next up,Member colours,Markers over party,Hide minimap button", "menu items: " .. table.concat(names, ","))
+check(table.concat(names, ",") == "Sync now,Crew,Next up,Route on map,Member colours,Markers over party,Hide minimap button", "menu items: " .. table.concat(names, ","))
 local kind, frame = ns.UI.Menu(UIParent)                       -- no MenuUtil in the harness: our own menu
-check(kind == "own" and frame and #frame.buttons == 6, "fallback menu with six entries")
-frame.buttons[4].scripts.OnClick()                               -- Member colours
+check(kind == "own" and frame and #frame.buttons == 7, "fallback menu with seven entries (route choices inline)")
+check(frame.buttons[4].label.text:find("Route on map: Tuesday crew", 1, true) and frame.buttons[4].label.text:find("2 stops in Durotar", 1, true),
+  "fallback menu offers the journal's route")
+frame.buttons[4].scripts.OnClick()                               -- Route on map: Tuesday crew
+check(db.ui.route == "Tuesday crew" and ns.Route.current() and #ns.Route.current().stops == 2, "picking a journal shows its route")
+check(H.chat[#H.chat]:find("2 stop(s) in Durotar", 1, true), "says where the route is")
+local clear = ns.UI.RouteItem().children
+check(clear[#clear].text == "Clear route", "Clear route offered once a route is shown")
+clear[#clear].run()
+check(db.ui.route == nil and ns.Route.current() == nil, "Clear route takes it off the map")
+frame = select(2, ns.UI.Menu(UIParent))
+frame.buttons[5].scripts.OnClick()                               -- Member colours
 check(db.ui.colors == true, "menu toggles member colours")
 frame.buttons[1].scripts.OnClick()                               -- Sync now
 check(H.reloads == 1, "menu Sync now reloads straight away")
 local built = {}
 MenuUtil = { CreateContextMenu = function(_, gen)
   gen(nil, { CreateTitle = function(_, t) built[#built + 1] = "title:" .. t end,
-             CreateButton = function(_, t) built[#built + 1] = "button:" .. t end,
+             CreateButton = function(_, t) built[#built + 1] = "button:" .. t
+               return { CreateRadio = function(_, r, isOn) built[#built + 1] = "radio:" .. r .. ":" .. tostring(isOn()) end,
+                        CreateButton = function(_, b) built[#built + 1] = "sub:" .. b end } end,
              CreateCheckbox = function(_, t, isOn) built[#built + 1] = "check:" .. t .. ":" .. tostring(isOn()) end })
 end }
 check(ns.UI.Menu(UIParent) == "native", "the game's own menu when it exists")
-check(built[1] == "title:Crewlog" and built[5] == "check:Member colours:true" and built[6] == "check:Markers over party:false", "native menu: title, buttons, checkboxes with state")
+check(built[1] == "title:Crewlog" and built[5] == "button:Route on map" and built[6] == "radio:Tuesday crew:false"
+  and built[7] == "check:Member colours:true" and built[8] == "check:Markers over party:false", "native menu: title, buttons, route submenu, checkboxes with state: " .. table.concat(built, ","))
 MenuUtil = nil
 GameTooltip.lines = {}
 ns.UI.Tooltip(GameTooltip)

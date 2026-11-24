@@ -113,6 +113,19 @@ public static class InboxWriter
                     }
                     sb.Append("    }");
                 }
+                if (j.Route is { Stops.Count: > 0 } route)
+                {
+                    sb.Append(", route = { map = ").Append(route.UiMapId).Append(", zone = ").Append(Str(route.Zone)).AppendLine(", stops = {");
+                    foreach (var st in route.Stops)
+                    {
+                        sb.Append("      { n = ").Append(st.N)
+                          .Append(", x = ").Append(st.X.ToString("0.#", CultureInfo.InvariantCulture))
+                          .Append(", y = ").Append(st.Y.ToString("0.#", CultureInfo.InvariantCulture))
+                          .Append(", place = ").Append(Str(st.Place)).Append(", tasks = { ")
+                          .Append(string.Join(", ", st.Tasks.Select(Str))).AppendLine(" } },");
+                    }
+                    sb.Append("    } }");
+                }
                 sb.AppendLine(" },");
             }
             sb.AppendLine("  },");

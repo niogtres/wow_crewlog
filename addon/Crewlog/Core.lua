@@ -46,6 +46,7 @@ frame:SetScript("OnEvent", function(_, event, ...)
     ns.Live.Start(db, C.guid(), UnitName("player"))
     ns.Tooltips.Start(C.guid)
     ns.Way.Start()
+    ns.Route.Start(db)
     return
   end
   if event == "PLAYER_REGEN_ENABLED" then UI.OnCombatEnded() return end

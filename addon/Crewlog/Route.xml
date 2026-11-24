@@ -1,0 +1,9 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+  <!-- A numbered stop of a journal's route on the world map (Route.lua). -->
+  <Frame name="CrewlogRoutePinTemplate" mixin="CrewlogRoutePinMixin" virtual="true">
+    <Size x="22" y="22"/>
+    <Scripts>
+      <OnLoad method="OnLoad"/>
+    </Scripts>
+  </Frame>
+</Ui>

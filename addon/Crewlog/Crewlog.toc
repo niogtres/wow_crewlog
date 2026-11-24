@@ -19,5 +19,7 @@ Crew.lua
 Next.lua
 Tooltips.lua
 Way.lua
+Route.lua
+Route.xml
 UI.lua
 Core.lua

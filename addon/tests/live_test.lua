@@ -14,7 +14,7 @@ H.addQuest(789, "Sting of the Scorpid", 3, { { 4, 10, false, "item", "Scorpid Wo
 H.addQuest(4641, "Your Place In The World", 1, {})
 CrewlogDB = nil
 
-local ns = H.load("Crewlog", { "Util.lua", "Store.lua", "Harvest.lua", "Collector.lua", "Live.lua", "Crew.lua", "Next.lua", "Tooltips.lua", "Way.lua", "UI.lua", "Core.lua" })
+local ns = H.load("Crewlog", { "Util.lua", "Store.lua", "Harvest.lua", "Collector.lua", "Live.lua", "Crew.lua", "Next.lua", "Tooltips.lua", "Way.lua", "Route.lua", "UI.lua", "Core.lua" })
 local Live = ns.Live
 H.fire("ADDON_LOADED", "Crewlog")
 H.fire("PLAYER_LOGIN")

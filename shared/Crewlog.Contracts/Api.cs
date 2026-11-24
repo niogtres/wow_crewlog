@@ -81,7 +81,13 @@ public sealed record InboxSuggestion(int Id, string Title, int Level, bool Soon,
 /// <summary>A quest two or more toons in the journal can pick up now.</summary>
 public sealed record InboxPick(int Id, string Title, int Level, string Who, string? Giver);
 
-public sealed record InboxJournal(string Title, IReadOnlyList<InboxToon> Toons, IReadOnlyList<InboxPick>? Together = null);
+public sealed record InboxJournal(string Title, IReadOnlyList<InboxToon> Toons, IReadOnlyList<InboxPick>? Together = null, InboxRoute? Route = null);
+
+/// <summary>The journal's suggested route (the website's route map) for the in-game world map: stops in one zone.</summary>
+public sealed record InboxRoute(int UiMapId, string Zone, IReadOnlyList<InboxStop> Stops);
+
+/// <summary>A route stop: number, zone coordinates (0–100), the place, and what to do there (one line per task).</summary>
+public sealed record InboxStop(int N, double X, double Y, string Place, IReadOnlyList<string> Tasks);
 
 public sealed record InboxToon(string Guid, string Name, string OwnerName, int? Level, string? Class, string? Zone, bool Mine,
     IReadOnlyList<InboxQuest> Quests, DateTimeOffset UpdatedAt, IReadOnlyList<int>? Done = null);

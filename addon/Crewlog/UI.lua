@@ -63,7 +63,7 @@ function UI.Tooltip(tt)
   tt:AddLine(MUTED .. "Last data from the app: " .. ago(db.lastInbox ~= 0 and db.lastInbox or nil))
   Crew.tooltip(tt, guid)
   tt:AddLine(" ")
-  tt:AddLine(GOLD .. "Click|r for the menu: sync, crew, next up, options", 1, 1, 1)
+  tt:AddLine(GOLD .. "Click|r for the menu: sync, crew, next up, route on map, options", 1, 1, 1)
   tt:AddLine(GOLD .. "Shift-click|r to sync right away", 1, 1, 1)
   tt:AddLine(GOLD .. "Right-click|r for your crew", 1, 1, 1)
   tt:AddLine(MUTED .. "Drag to move · logging out syncs too")
@@ -78,6 +78,7 @@ function UI.MenuItems()
     { text = "Sync now", hint = "reloads your UI for a moment", run = function() UI.Sync(true) end },
     { text = "Crew", run = function() Crew.Show(guid(), "crew") end },
     { text = "Next up", run = function() Crew.Show(guid(), "next") end },
+    UI.RouteItem(),
     { text = "Member colours", isOn = function() return db.ui.colors == true end, run = function() Live.setColors(not db.ui.colors) end },
     { text = "Markers over party", isOn = function() return db.ui.markers == true end,
       run = function()
@@ -91,6 +92,41 @@ function UI.MenuItems()
   }
 end
 
+-- "Route on map": one choice per journal that has a route, plus Clear. A submenu in the game's own menu; the
+-- fallback menu lists the choices inline.
+function UI.RouteItem()
+  local Route = ns.Route
+  local children = {}
+  for _, j in ipairs(Route.journals()) do
+    local title = j.title
+    children[#children + 1] = { text = title, hint = #j.route.stops .. " stops in " .. j.route.zone,
+      isOn = function() return Route.selected() == title end,
+      run = function() if Route.selected() == title then Route.clear() else Route.show(title) end end }
+  end
+  if #children == 0 then
+    children[1] = { text = "No routes yet", hint = "sync with your crew's quests in one zone", run = function()
+      say("no journal route yet. Routes come from the Crewlog app after a sync (they need quests in one zone).")
+    end }
+  end
+  if Route.selected() then children[#children + 1] = { text = "Clear route", run = function() Route.clear() end } end
+  return { text = "Route on map", children = children }
+end
+
+-- Flattens submenus for the fallback menu.
+local function flat(items)
+  local out = {}
+  for _, it in ipairs(items) do
+    if it.children then
+      for _, c in ipairs(it.children) do
+        out[#out + 1] = { text = it.text .. ": " .. c.text, hint = c.hint, isOn = c.isOn, run = c.run }
+      end
+    else
+      out[#out + 1] = it
+    end
+  end
+  return out
+end
+
 local menuFrame
 -- The game's own context menu where it exists (modern client), else a small menu of our own.
 function UI.Menu(anchor)
@@ -99,12 +135,19 @@ function UI.Menu(anchor)
     MenuUtil.CreateContextMenu(anchor, function(_, root)
       root:CreateTitle("Crewlog")
       for _, it in ipairs(items) do
-        if it.isOn then root:CreateCheckbox(it.text, it.isOn, it.run)
+        if it.children then
+          local sub = root:CreateButton(it.text)
+          for _, c in ipairs(it.children) do
+            if c.isOn then sub:CreateRadio(c.text, c.isOn, c.run)
+            else sub:CreateButton(c.text, c.run) end
+          end
+        elseif it.isOn then root:CreateCheckbox(it.text, it.isOn, it.run)
         else root:CreateButton(it.text, it.run) end
       end
     end)
     return "native"
   end
+  items = flat(items)
   if not menuFrame then
     menuFrame = CreateFrame("Frame", "CrewlogMenu", UIParent, "TooltipBackdropTemplate")
     menuFrame:SetFrameStrata("DIALOG")

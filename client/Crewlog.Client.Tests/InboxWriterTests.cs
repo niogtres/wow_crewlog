@@ -25,7 +25,11 @@ public class InboxWriterTests
                     new InboxToon("Player-1-B", "Brögg", "Bob", 12, "Warrior", "Durotar", false,
                         [new InboxQuest(789, "Sting of the Scorpid", 0, 1, false), new InboxQuest(4641, "Your Place", 0, 0, true)],
                         DateTimeOffset.FromUnixTimeSeconds(1700000100), [788, 789]),
-                ], [new InboxPick(790, "Sarkoth", 5, "Brogg, Ashka", "Hana'zua · Durotar (40.6, 62.6)")]),
+                ], [new InboxPick(790, "Sarkoth", 5, "Brogg, Ashka", "Hana'zua · Durotar (40.6, 62.6)")],
+                new InboxRoute(1411, "Durotar", [
+                    new InboxStop(1, 42.9, 69.24, "Zureetha Fargaze", ["Pick up Vile Familiars (Brögg)"]),
+                    new InboxStop(2, 45, 56, "Vile Familiar", ["Vile Familiar for Vile Familiars", "Turn in Sarkoth"]),
+                ])),
             ],
             [new InboxNext("Player-1-A", 14, 1411, "Durotar", [new InboxSuggestion(792, "Vile Familiars", 4, true, "unlocks 1 more", "Zureetha Fargaze")])]);
             var path = InboxWriter.Write(flavor, resp, crew)!;
@@ -50,6 +54,12 @@ public class InboxWriterTests
             Assert.Contains(@"\195\182", File.ReadAllText(path)); // "ö" as UTF-8 bytes, readable by WoW's Lua
             Assert.Equal(789, toon["doneIds"].AsTable()![2].AsInt());              // crewmate has done these of my quests
             Assert.Equal(790, journal["together"].AsTable()![1].AsTable()!["id"].AsInt());
+            var route = journal["route"].AsTable()!;                                  // the route for the in-game map
+            Assert.Equal(1411, route["map"].AsInt());
+            var stops = route["stops"].AsTable()!;
+            Assert.Equal("Zureetha Fargaze", stops[1].AsTable()!["place"].AsString());
+            Assert.Contains("x = 42.9, y = 69.2", File.ReadAllText(path));               // invariant decimals, one place
+            Assert.Equal("Turn in Sarkoth", stops[2].AsTable()!["tasks"].AsTable()![2].AsString());
             var next = inbox["next"].AsTable()![1].AsTable()!;
             Assert.Equal(1411, next["uiMap"].AsInt());
             var suggestion = next["quests"].AsTable()![1].AsTable()!;
