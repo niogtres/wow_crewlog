@@ -30,14 +30,31 @@ public sealed class AppConfig
 
     public const string DefaultServerUrl = "https://crewlog.dk";
 
+    /// <summary>Earlier addresses of the public server. A saved one moves to <see cref="DefaultServerUrl"/> on load;
+    /// the old name keeps answering for copies that haven't updated yet.</summary>
+    public static readonly string[] FormerServerUrls = ["https://crewlog.dk", "https://www.crewlog.dk"];
+
     public static AppConfig Load(string path)
     {
         try
         {
-            if (File.Exists(path) && JsonSerializer.Deserialize<AppConfig>(File.ReadAllText(path), Json) is { } config) return config;
+            if (File.Exists(path) && JsonSerializer.Deserialize<AppConfig>(File.ReadAllText(path), Json) is { } config)
+            {
+                if (config.MoveFromFormerServer()) { try { config.Save(path); } catch (IOException) { } }
+                return config;
+            }
         }
         catch (JsonException) { }
         return new AppConfig();
+    }
+
+    /// <summary>Points a saved former address of the public server at its current one. True when it changed.</summary>
+    public bool MoveFromFormerServer()
+    {
+        var saved = ServerUrl.Trim().TrimEnd('/');
+        if (!FormerServerUrls.Any(u => string.Equals(u, saved, StringComparison.OrdinalIgnoreCase))) return false;
+        ServerUrl = DefaultServerUrl;
+        return true;
     }
 
     public void Save(string path)
