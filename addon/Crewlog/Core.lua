@@ -96,5 +96,6 @@ SlashCmdList.CREWLOG = function(msg)
   local live = #ns.Live.list()
   say(string.format("party: %s · member colours %s · markers %s", ns.Live.channel() and (live .. " with Crewlog, live") or "not in a group",
     db.ui.colors and "on" or "off", db.ui.markers and "on" or "off"))
+  if ns.Live.channel() or ns.Live.stats.sent > 0 then say(ns.Live.statusLine()) end
   say("Click the |cffF2C25Bcompass|r on the minimap (or |cffF2C25B/cl sync|r) to sync now; logging out syncs too. |cffF2C25B/cl|r (or right-click) shows your crew, |cffF2C25B/cl next|r what to pick up next. Optional: |cffF2C25B/cl colors|r (a colour per party member), |cffF2C25B/cl markers|r (icon over their heads). |cffF2C25B/cl minimap|r hides the button.")
 end

@@ -27,6 +27,10 @@ local queue, pumping = {}, false
 local syncPending = false
 local lastRoster = {}
 
+-- Counters for /cl status, so a party test shows where messages stop: refused by the game, not relayed by the
+-- server (our own messages come back to us when they went out), or not arriving from the others.
+Live.stats = { sent = 0, refused = 0, echoed = 0, received = 0, prefix = nil }
+
 local function notify()
   for _, fn in ipairs(Live.listeners) do pcall(fn) end
 end
@@ -47,6 +51,8 @@ local function pump()
   local ch = Live.channel()
   if ch and C_ChatInfo and C_ChatInfo.SendAddonMessage then
     local ok, res = pcall(C_ChatInfo.SendAddonMessage, Live.PREFIX, item.m, ch)
+    if ok and (res == nil or res == 0 or res == true) then Live.stats.sent = Live.stats.sent + 1
+    else Live.stats.refused = Live.stats.refused + 1; Live.stats.lastCode = ok and tostring(res) or "error" end
     -- The result is an enum on the modern client: 0 = sent; anything else = throttled or refused. Back off.
     if ok and type(res) == "number" and res ~= 0 and item.tries < 3 then
       item.tries = item.tries + 1
@@ -61,6 +67,14 @@ end
 local function send(m)
   queue[#queue + 1] = { m = m, tries = 0 }
   if not pumping then pumping = true; C_Timer.After(0.05, pump) end
+end
+
+-- One line for /cl status.
+function Live.statusLine()
+  local st = Live.stats
+  return string.format("live messages: sent %d · came back %d · received %d from others%s%s", st.sent, st.echoed, st.received,
+    st.refused > 0 and (" · refused " .. st.refused .. " (code " .. tostring(st.lastCode) .. ")") or "",
+    st.prefix == false and " · prefix NOT registered" or "")
 end
 
 -- Our current log as compact records, from the collector's snapshot.
@@ -128,7 +142,9 @@ end
 
 function Live.handle(msg)
   local cmd, guid, rest = msg:match("^(%u)|([^|]+)|?(.*)$")
-  if not cmd or guid == myGuid then return end -- our own messages come back to us
+  if not cmd then return end
+  if guid == myGuid then Live.stats.echoed = Live.stats.echoed + 1 return end -- our own messages come back to us
+  Live.stats.received = Live.stats.received + 1
   if cmd == "H" then
     Live.schedule(false) -- a newcomer: send them our log
     return
@@ -313,7 +329,10 @@ end)
 function Live.Start(theDb, guid, name)
   db, myGuid, myName = theDb, guid, name
   db.ui = db.ui or {}
-  if C_ChatInfo and C_ChatInfo.RegisterAddonMessagePrefix then pcall(C_ChatInfo.RegisterAddonMessagePrefix, Live.PREFIX) end
+  if C_ChatInfo and C_ChatInfo.RegisterAddonMessagePrefix then
+    local ok, res = pcall(C_ChatInfo.RegisterAddonMessagePrefix, Live.PREFIX)
+    Live.stats.prefix = ok and res ~= false and res ~= 2 and res ~= 3 -- 1 = already registered: fine
+  end
   Live.listeners[#Live.listeners + 1] = Live.refreshMarkers
   Live.onRoster()
   C_Timer.After(Live.HEARTBEAT, heartbeat)

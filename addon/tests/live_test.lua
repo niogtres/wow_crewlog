@@ -152,6 +152,22 @@ SlashCmdList.CREWLOG("markers")
 SlashCmdList.CREWLOG("markers")
 check(H.cvars.nameplateShowFriends == "1", "a setting the player had on themselves is left on")
 
+-- 11b. Counters for /cl status: what went out, came back, arrived; refusals with the game's code.
+local ls = Live.stats
+check(ls.sent > 0 and ls.received > 0 and ls.prefix == true, "counters: sent " .. ls.sent .. ", received " .. ls.received)
+local echoedBefore = ls.echoed
+Live.handle("E|" .. H.state.guid .. "|1")
+check(ls.echoed == echoedBefore + 1, "our own message coming back counts as echoed, not received")
+local realSend = C_ChatInfo.SendAddonMessage
+C_ChatInfo.SendAddonMessage = function() return 3 end
+Live.sync()
+H.advance(10)
+C_ChatInfo.SendAddonMessage = realSend
+H.advance(10)
+check(ls.refused > 0 and ls.lastCode == "3", "refused sends counted with the game's code")
+local line = Live.statusLine()
+check(line:find("sent %d+") and line:find("came back") and line:find("refused") and line:find("code 3"), "status line: " .. line)
+
 -- 12. Leaving: peers are dropped, nothing more is sent.
 H.group.members = {}
 H.fire("GROUP_ROSTER_UPDATE")
