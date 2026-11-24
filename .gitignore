@@ -41,3 +41,6 @@ deploy/backups/
 # The proxy server's full nginx.conf, if dropped here for editing (private infrastructure)
 /nginx.conf*
 *.conf.old
+
+# Scratch space for private files (configs, captures, notes) dropped in for editing. Never committed.
+/ignored/
