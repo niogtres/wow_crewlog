@@ -45,10 +45,19 @@ GetObjectiveText = function() return st.dialogObjective end
 
 C_Timer = { After = function(delay, fn) timers[#timers + 1] = { at = st.time + delay, fn = fn } end }
 C_AddOns = { GetAddOnMetadata = function(_, field) if field == "Version" then return "0.1.0-test" end end }
+H.pin = nil   -- the map pin /way set: {map, x, y}
 C_Map = {
   GetBestMapForUnit = function() return st.map end,
   GetPlayerMapPosition = function() return { GetXY = function() return st.pos[1], st.pos[2] end } end,
+  GetMapChildrenInfo = function() return {
+    { mapID = 1411, name = "Durotar", mapType = 3 }, { mapID = 1454, name = "Orgrimmar", mapType = 3 },
+    { mapID = 1456, name = "Thunder Bluff", mapType = 3 }, { mapID = 1412, name = "Mulgore", mapType = 3 } } end,
+  GetMapInfo = function(id) for _, m in ipairs(C_Map.GetMapChildrenInfo()) do if m.mapID == id then return m end end end,
+  CanSetUserWaypointOnMap = function() return true end,
+  SetUserWaypoint = function(p) H.pin = p end,
 }
+UiMapPoint = { CreateFromCoordinates = function(map, x, y) return { map = map, x = x, y = y } end }
+C_SuperTrack = { SetSuperTrackedUserWaypoint = function(on) H.tracked = on end }
 
 local function logIndexOf(qid)
   for i, e in ipairs(st.log) do if e.id == qid then return i end end

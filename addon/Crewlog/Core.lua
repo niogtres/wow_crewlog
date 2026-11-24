@@ -45,6 +45,7 @@ frame:SetScript("OnEvent", function(_, event, ...)
     ns.Live.listeners[#ns.Live.listeners + 1] = function() ns.Crew.Refresh(C.guid()) end
     ns.Live.Start(db, C.guid(), UnitName("player"))
     ns.Tooltips.Start(C.guid)
+    ns.Way.Start()
     return
   end
   if event == "PLAYER_REGEN_ENABLED" then UI.OnCombatEnded() return end
@@ -56,6 +57,8 @@ end)
 SLASH_CREWLOG1 = "/cl"
 SLASH_CREWLOG2 = "/crewlog"
 SlashCmdList.CREWLOG = function(msg)
+  local way = (msg or ""):match("^%s*[Ww][Aa][Yy]%s+(.*)$")
+  if way then ns.Way.run(way) return end
   msg = (msg or ""):lower():match("^%s*(.-)%s*$")
   if not db then say("not loaded yet") return end
   if msg == "sync" then UI.Sync(true) return end
@@ -97,5 +100,5 @@ SlashCmdList.CREWLOG = function(msg)
   say(string.format("party: %s · member colours %s · markers %s", ns.Live.channel() and (live .. " with Crewlog, live") or "not in a group",
     db.ui.colors and "on" or "off", db.ui.markers and "on" or "off"))
   if ns.Live.channel() or ns.Live.stats.sent > 0 then say(ns.Live.statusLine()) end
-  say("Click the |cffF2C25Bcompass|r on the minimap (or |cffF2C25B/cl sync|r) to sync now; logging out syncs too. |cffF2C25B/cl|r (or right-click) shows your crew, |cffF2C25B/cl next|r what to pick up next. Optional: |cffF2C25B/cl colors|r (a colour per party member), |cffF2C25B/cl markers|r (icon over their heads). |cffF2C25B/cl minimap|r hides the button.")
+  say("Click the |cffF2C25Bcompass|r on the minimap (or |cffF2C25B/cl sync|r) to sync now; logging out syncs too. |cffF2C25B/cl|r (or right-click) shows your crew, |cffF2C25B/cl next|r what to pick up next. Coordinates copied on the website set a map pin: |cffF2C25B/way Durotar 42.9 69.2|r (or |cffF2C25B/cl way …|r when a waypoint addon owns /way). Optional: |cffF2C25B/cl colors|r (a colour per party member), |cffF2C25B/cl markers|r (icon over their heads). |cffF2C25B/cl minimap|r hides the button.")
 end

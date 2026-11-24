@@ -14,7 +14,7 @@ H.addQuest(789, "Sting of the Scorpid", 3, { { 2, 10, false, "item", "Scorpid Wo
 st.map = 1411 -- Durotar
 CrewlogDB = nil
 
-local ns = H.load("Crewlog", { "Util.lua", "Store.lua", "Harvest.lua", "Collector.lua", "Live.lua", "Crew.lua", "Next.lua", "Tooltips.lua", "UI.lua", "Core.lua" })
+local ns = H.load("Crewlog", { "Util.lua", "Store.lua", "Harvest.lua", "Collector.lua", "Live.lua", "Crew.lua", "Next.lua", "Tooltips.lua", "Way.lua", "UI.lua", "Core.lua" })
 H.fire("ADDON_LOADED", "Crewlog")
 H.fire("PLAYER_LOGIN")
 H.advance(1)
@@ -111,6 +111,30 @@ MenuUtil = nil
 GameTooltip.lines = {}
 ns.UI.Tooltip(GameTooltip)
 check(table.concat(GameTooltip.lines, "\n"):find("for the menu", 1, true), "tooltip explains the click")
+
+-- /way: coordinates copied on the website set the game's map pin
+local Way = ns.Way
+local z, x, y, note = Way.parse("Thunder Bluff 45.2, 61.3 Cairne")
+check(z == "Thunder Bluff" and x == 45.2 and y == 61.3 and note == "Cairne", "parse: zone, x, y (comma fine), note")
+z, x, y = Way.parse("42.9 69.2")
+check(z == nil and x == 42.9 and y == 69.2, "parse: no zone means here")
+check(Way.parse("Durotar") == nil, "parse: no coordinates")
+check(SlashCmdList.CREWLOGWAY ~= nil and SLASH_CREWLOGWAY1 == "/way", "takes /way when no waypoint addon has it")
+H.chat = {}
+SlashCmdList.CREWLOGWAY("Durotar 42.9 69.2")
+check(H.pin and H.pin.map == 1411 and math.abs(H.pin.x - 0.429) < 1e-9 and H.tracked == true, "/way Durotar sets and tracks the pin")
+check((H.chat[1] or ""):find("map pin set: Durotar 42.9, 69.2", 1, true), "/way says where")
+SlashCmdList.CREWLOG("way thunder bluff 45 61")
+check(H.pin.map == 1456, "/cl way works too, zone names in any case")
+H.pin = nil
+SlashCmdList.CREWLOGWAY("Nowhere Land 10 10")
+check(H.pin == nil and (H.chat[#H.chat] or ""):find("unknown zone", 1, true), "unknown zone: no pin, says so")
+SlashCmdList.CREWLOGWAY("50 50")
+check(H.pin and H.pin.map == st.map, "no zone: the player's map")
+SlashCmdList.CREWLOGWAY = nil; SLASH_CREWLOGWAY1 = nil
+SLASH_TOMTOM_WAY1 = "/way"
+check(Way.Start() == false and SlashCmdList.CREWLOGWAY == nil, "leaves /way to TomTom & co.")
+SLASH_TOMTOM_WAY1 = nil
 
 print(string.format("%d passed, %d failed", passed, failed))
 if failed > 0 then os.exit(1) end

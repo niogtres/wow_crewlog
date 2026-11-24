@@ -18,5 +18,6 @@ Live.lua
 Crew.lua
 Next.lua
 Tooltips.lua
+Way.lua
 UI.lua
 Core.lua
