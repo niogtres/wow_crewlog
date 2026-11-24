@@ -37,3 +37,6 @@ dist/
 
 # Server backups and secrets
 deploy/backups/
+
+# The proxy server's full nginx.conf, if dropped here for editing (private infrastructure)
+/nginx.conf
