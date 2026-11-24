@@ -44,3 +44,6 @@ deploy/backups/
 
 # Scratch space for private files (configs, captures, notes) dropped in for editing. Never committed.
 /ignored/
+
+# Python caches (tools/terrain)
+__pycache__/
