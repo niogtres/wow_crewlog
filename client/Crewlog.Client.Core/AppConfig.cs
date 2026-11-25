@@ -30,9 +30,8 @@ public sealed class AppConfig
 
     public const string DefaultServerUrl = "https://crewlog.dk";
 
-    /// <summary>Earlier addresses of the public server. A saved one moves to <see cref="DefaultServerUrl"/> on load;
-    /// the old name keeps answering for copies that haven't updated yet.</summary>
-    public static readonly string[] FormerServerUrls = ["https://crewlog.dk", "https://www.crewlog.dk"];
+    /// <summary>Earlier addresses of the public server. A saved one moves to <see cref="DefaultServerUrl"/> on load.</summary>
+    public static readonly string[] FormerServerUrls = ["https://www.crewlog.dk"];
 
     public static AppConfig Load(string path)
     {

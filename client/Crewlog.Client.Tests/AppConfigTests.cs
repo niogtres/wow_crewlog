@@ -5,10 +5,9 @@ namespace Crewlog.Client.Tests;
 public class AppConfigTests
 {
     [Theory]
-    [InlineData("https://crewlog.dk")]
-    [InlineData("https://crewlog.dk/")]
-    [InlineData("HTTPS://crewlog.dk")]
     [InlineData("https://www.crewlog.dk")]
+    [InlineData("https://www.crewlog.dk/")]
+    [InlineData("HTTPS://WWW.Crewlog.dk")]
     public void A_saved_former_server_address_moves_to_the_current_one_and_is_saved(string former)
     {
         var dir = Directory.CreateTempSubdirectory("crewlog-config").FullName;
