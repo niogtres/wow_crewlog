@@ -231,6 +231,12 @@ internal sealed class TrayApp : ApplicationContext
         {
             if (MessageBox.Show($"Unlink this PC from {_config.LinkedAs}? Quests stay saved on the server.", "Crewlog",
                     MessageBoxButtons.OKCancel, MessageBoxIcon.Question) != DialogResult.OK) return;
+            // Tell the server, so the token stops working there too (a copy of it is useless after this).
+            try { await ServerClient.Create(_config.ServerUrl, _token).UnlinkAsync(); }
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or ServerException)
+            {
+                _log.Warn("Couldn't unlink on the server (remove it on the website's Linked PCs page): " + ex.Message);
+            }
             _tokens.Clear();
             _token = null;
             _config.LinkedAs = null;

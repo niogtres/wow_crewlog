@@ -77,6 +77,13 @@ public sealed class ServerClient(HttpClient http)
         await EnsureOk(resp, ct);
     }
 
+    /// <summary>Unlinks this PC on the server: its token stops working there, not only on this PC.</summary>
+    public async Task UnlinkAsync(CancellationToken ct = default)
+    {
+        using var resp = await http.DeleteAsync(ApiRoutes.DeviceSelf.TrimStart('/'), ct);
+        await EnsureOk(resp, ct);
+    }
+
     private async Task<T> GetAsync<T>(string route, CancellationToken ct)
     {
         using var resp = await http.GetAsync(route.TrimStart('/'), ct);

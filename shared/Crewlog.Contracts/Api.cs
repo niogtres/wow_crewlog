@@ -24,6 +24,8 @@ public static class ApiRoutes
     /// <summary>PUT attaches, DELETE detaches: /api/v1/journals/{journalId}/characters/{characterGuid}</summary>
     public const string JournalCharacter = "/api/v1/journals/{journalId:guid}/characters/{characterGuid}";
     public const string Inbox = "/api/v1/inbox";
+    /// <summary>DELETE: this PC's own link (its token stops working at once). From app 0.8.18.</summary>
+    public const string DeviceSelf = "/api/v1/auth/device";
 
     public static string JournalCharacterPath(Guid journalId, string characterGuid) =>
         $"/api/v1/journals/{journalId}/characters/{Uri.EscapeDataString(characterGuid)}";
