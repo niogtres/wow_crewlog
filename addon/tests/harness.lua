@@ -37,6 +37,7 @@ end
 UnitName = function() return st.name end
 UnitClass = function() return "Rogue", "ROGUE", 4 end
 UnitRace = function() return "Troll", "Troll", 8 end
+UnitSex = function() return 3 end
 UnitFactionGroup = function() return "Horde", "Horde" end
 UnitLevel = function() return st.level end
 GetQuestID = function() return st.dialogQuest end

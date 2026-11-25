@@ -42,7 +42,7 @@ local db = CrewlogDB
 check(#db.events == 1 and db.events[1].s == 3, "acked events pruned, unacked kept")
 check(db.harvest.quests[4641] == nil and db.harvest.quests[788] ~= nil, "acked harvest pruned")
 local rec = db.chars[st.guid]
-check(rec.name == "Zarnokk" and rec.class == "ROGUE" and rec.race == "Troll" and rec.realmId == 6949 and rec.raceId == 8 and rec.classId == 4, "character attributes")
+check(rec.name == "Zarnokk" and rec.class == "ROGUE" and rec.race == "Troll" and rec.realmId == 6949 and rec.raceId == 8 and rec.classId == 4 and rec.sex == 3, "character attributes")
 check(#rec.completed == 2 and rec.completed[1] == 3911 and rec.completed[2] == 4641, "completed list sorted from API")
 check(rec.log[788] and rec.log[788].o[1].h == 5 and rec.log[0] == nil, "log snapshot skips headers")
 check(rec.log[788].o[1].t == "Mottled Boar slain", "objective text kept without the counter")

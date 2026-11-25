@@ -82,7 +82,8 @@ public static class CrewlogSaveReader
             log,
             rec["pos"].AsTable()?["map"].AsInt(),
             rec["pos"].AsTable()?["x"].AsNumber(),
-            rec["pos"].AsTable()?["y"].AsNumber());
+            rec["pos"].AsTable()?["y"].AsNumber(),
+            rec["sex"].AsInt());
     }
 
     private static LogQuest ReadLogQuest(int qid, LuaTable q)

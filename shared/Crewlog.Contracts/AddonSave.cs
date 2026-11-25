@@ -21,7 +21,8 @@ public sealed record AddonSave(
     long DroppedEvents);
 
 /// <summary>A character's current state. Identity is the player GUID (Forever returns an empty realm name).
-/// Pos* (addon 0.8.6+): where the toon stood when the game last saved, zone map id and 0–100 coordinates.</summary>
+/// Pos* (addon 0.8.6+): where the toon stood when the game last saved, zone map id and 0–100 coordinates.
+/// Sex (addon 0.8.14+): the game's UnitSex, 2 male and 3 female, for the toon's portrait.</summary>
 public sealed record CharacterSnapshot(
     string Guid,
     string? Name,
@@ -40,7 +41,8 @@ public sealed record CharacterSnapshot(
     IReadOnlyList<LogQuest> Log,
     int? PosMapId = null,
     double? PosX = null,
-    double? PosY = null);
+    double? PosY = null,
+    int? Sex = null);
 
 public sealed record LogQuest(int QuestId, string? Title, int? Level, IReadOnlyList<ObjectiveState> Objectives);
 

@@ -91,6 +91,7 @@ function C.start(theDb)
   rec.class, rec.race = class, race
   -- numeric ids match QuestieDB's requiredRaces/requiredClasses masks (Skyborne = 95/96)
   rec.classId, rec.raceId = classId, raceId
+  rec.sex = UnitSex and UnitSex("player") or nil   -- 2 male, 3 female: picks the toon's portrait on the website
   rec.faction = UnitFactionGroup("player")
   rec.level = UnitLevel("player")
   rec.map = C_Map.GetBestMapForUnit("player")

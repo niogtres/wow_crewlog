@@ -27,6 +27,7 @@ CrewlogDB = {
 			["raceId"] = 8,
 			["realmId"] = 6949,
 			["seq"] = 11,
+			["sex"] = 3,
 		},
 	},
 	["events"] = {
