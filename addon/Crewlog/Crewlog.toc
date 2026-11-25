@@ -2,7 +2,7 @@
 ## Title: Crewlog
 ## Notes: Shared quest journal for you and your crew. Syncs through the Crewlog Windows client.
 ## Author: Crewlog
-## Version: 0.8.11
+## Version: 0.8.12
 ## IconTexture: Interface\AddOns\Crewlog\media\minimap
 ## SavedVariables: CrewlogDB
 ## OptionalDeps: Crewlog_Inbox
