@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/client/">
+    <Project Path="client/Crewlog.Client.Cli/Crewlog.Client.Cli.csproj" />
+    <Project Path="client/Crewlog.Client.Core/Crewlog.Client.Core.csproj" />
+    <Project Path="client/Crewlog.Client.Tests/Crewlog.Client.Tests.csproj" />
+    <Project Path="client/Crewlog.Client/Crewlog.Client.csproj" />
+  </Folder>
+  <Folder Name="/shared/">
+    <Project Path="shared/Crewlog.Contracts/Crewlog.Contracts.csproj" />
+  </Folder>
+</Solution>

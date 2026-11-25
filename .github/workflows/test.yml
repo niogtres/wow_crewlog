@@ -1,0 +1,32 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  addon:
+    name: Addon (Lua 5.1)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -q && sudo apt-get install -yq lua5.1
+      - run: |
+          lua5.1 addon/tests/collector_test.lua
+          lua5.1 addon/tests/live_test.lua
+          lua5.1 addon/tests/next_test.lua
+
+  client:
+    name: Windows app
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - run: dotnet test client/Crewlog.Client.Tests
+      - run: dotnet build client/Crewlog.Client -c Release
