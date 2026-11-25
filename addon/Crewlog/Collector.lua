@@ -74,6 +74,24 @@ local function refreshLog()
   rec.log = fresh
 end
 
+-- Where the toon stands, for the website's route map: zone map id plus 0-100 coordinates, the same scale as quest
+-- data. Taken every POS_EVERY seconds and on zone changes, because when the game saves (PLAYER_LEAVING_WORLD) it
+-- often can't say any more. Inside an instance there is no position, and none is kept: an old one would be wrong.
+C.POS_EVERY = 20
+local function notePos()
+  local rec = guid and S.char(db, guid)
+  if not rec then return end
+  if IsInInstance and IsInInstance() then rec.pos = nil return end
+  local map = C_Map.GetBestMapForUnit("player")
+  local pos = map and C_Map.GetPlayerMapPosition(map, "player")
+  local x, y
+  if pos and pos.GetXY then x, y = pos:GetXY() end
+  if x and y and (x > 0 or y > 0) then
+    rec.pos = { map = map, x = math.floor(x * 1000 + 0.5) / 10, y = math.floor(y * 1000 + 0.5) / 10 }
+  end
+end
+C.notePos = notePos
+
 local function completedList()
   local ids = C_QuestLog.GetAllCompletedQuestIDs() or {}
   return U.copySorted(ids)
@@ -100,6 +118,8 @@ function C.start(theDb)
   rec.log = readLog()
   rec.lastSeen = U.now()
   H.reset()
+  notePos()
+  if C_Timer.NewTicker and not C.posTicker then C.posTicker = C_Timer.NewTicker(C.POS_EVERY, notePos) end
   return rec
 end
 
@@ -161,6 +181,7 @@ C.handlers = {
     -- At PLAYER_LOGIN the map is often not known yet; the first fix is a position, not a zone change.
     local known = rec.map ~= nil
     rec.map = map
+    notePos()
     if known then emit({ k = "ZONE", m = map }) end
   end,
 
@@ -172,19 +193,8 @@ C.handlers = {
     rec.lastSeen = U.now()
   end,
 
-  -- Where the toon stands when the game saves (a /reload, which is what Sync does, or logging out), for the
-  -- website's route map: zone map id plus 0-100 coordinates, the same scale as quest data.
-  PLAYER_LEAVING_WORLD = function()
-    local rec = S.char(db, guid)
-    local map = C_Map.GetBestMapForUnit("player")
-    local pos = map and C_Map.GetPlayerMapPosition(map, "player")
-    local x, y
-    if pos and pos.GetXY then x, y = pos:GetXY() end
-    if x and y and (x > 0 or y > 0) then
-      rec.pos = { map = map, x = math.floor(x * 1000 + 0.5) / 10, y = math.floor(y * 1000 + 0.5) / 10 }
-    else
-      rec.pos = nil -- inside an instance or no position: say nothing rather than something old
-    end
-  end,
+  -- One last look when the game saves (a /reload, which is what Sync does, or logging out); if the game can't
+  -- say by then, the last position taken stays.
+  PLAYER_LEAVING_WORLD = function() notePos() end,
 }
 C.handlers.UNIT_QUEST_LOG_CHANGED = function(unit) if unit == "player" then C.handlers.QUEST_LOG_UPDATE() end end

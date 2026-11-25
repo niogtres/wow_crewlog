@@ -186,6 +186,12 @@ do
   local p = db.chars[st.guid].pos
   check(p and p.map == 1411 and p.x == 43.2 and p.y == 68.7, "position saved for the route map (0-100)")
 end
+st.pos = nil   -- the game often has no position left by the time it saves
+H.fire("PLAYER_LEAVING_WORLD")
+do
+  local p = db.chars[st.guid].pos
+  check(p and p.x == 43.2 and p.y == 68.7, "the last position taken stays when the game can't say at save time")
+end
 H.fire("PLAYER_LOGOUT")
 
 -- Fixtures for the .NET parser (two serializer styles).

@@ -49,7 +49,7 @@ C_AddOns = { GetAddOnMetadata = function(_, field) if field == "Version" then re
 H.pin = nil   -- the map pin /way set: {map, x, y}
 C_Map = {
   GetBestMapForUnit = function() return st.map end,
-  GetPlayerMapPosition = function() return { GetXY = function() return st.pos[1], st.pos[2] end } end,
+  GetPlayerMapPosition = function() if not st.pos then return nil end return { GetXY = function() return st.pos[1], st.pos[2] end } end,
   GetMapChildrenInfo = function() return {
     { mapID = 1411, name = "Durotar", mapType = 3 }, { mapID = 1454, name = "Orgrimmar", mapType = 3 },
     { mapID = 1456, name = "Thunder Bluff", mapType = 3 }, { mapID = 1412, name = "Mulgore", mapType = 3 } } end,
