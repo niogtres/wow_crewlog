@@ -21,7 +21,7 @@ with the website. The website and its server at crewlog.dk are not part of it.
   up next, quest tooltips show who else is on a quest or has done it, a suggested route (a journal's, or your toon's own) can be
   shown on the world map, and party members who run Crewlog see each other's progress live, within seconds. Member colours and
   markers over heads are opt-in.
-- **Accounts:** Discord login only. Pick a name and picture, add a bio and links, delete toons or your whole account.
+- **Accounts:** Discord login only. Pick a name and picture, add a short bio, delete toons or your whole account.
 
 Crewlog only uses the game's official addon interface: no automation, no memory reading, no changes to the game.
 
