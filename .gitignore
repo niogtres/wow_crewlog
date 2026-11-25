@@ -47,3 +47,6 @@ deploy/backups/
 
 # Python caches (tools/terrain)
 __pycache__/
+
+# Personal Claude Code settings
+.claude/settings.local.json
