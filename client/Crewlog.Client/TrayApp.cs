@@ -253,7 +253,8 @@ internal sealed class TrayApp : ApplicationContext
             var start = await client.StartDeviceLoginAsync(Environment.MachineName);
             _log.Info($"Linking: open {start.VerifyUrl} and confirm code {start.UserCode}");
             _tray.ShowBalloonTip(10000, $"Code {start.UserCode}", "Log in with Discord in your browser and check that it shows this code.", ToolTipIcon.Info);
-            Open(start.VerifyUrl);
+            if (ServerPrompt.IsOnServer(start.VerifyUrl, _config.ServerUrl)) Open(start.VerifyUrl);
+            else _log.Warn("The server sent a link page on another site; not opening it: " + start.VerifyUrl);
             var (token, user) = await client.WaitForApprovalAsync(start);
             _tokens.Save(token);
             _token = token;

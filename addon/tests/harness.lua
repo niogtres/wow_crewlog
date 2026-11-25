@@ -34,7 +34,12 @@ UnitGUID = function(u)
   local m = i and H.group and H.group.members[i]
   return m and m[1]
 end
-UnitName = function() return st.name end
+UnitName = function(u)
+  local i = tonumber((u or ""):match("^party(%d)$") or (u or ""):match("^raid(%d+)$") or "")
+  local m = i and H.group and H.group.members[i]
+  if m then return m[2] end
+  return st.name
+end
 UnitClass = function() return "Rogue", "ROGUE", 4 end
 UnitRace = function() return "Troll", "Troll", 8 end
 UnitSex = function() return 3 end

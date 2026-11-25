@@ -88,7 +88,7 @@ internal static class AppInstall
             using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
             var latest = http.GetFromJsonAsync<Crewlog.Contracts.ReleaseInfo>(config.ServerUrl.TrimEnd('/') + Crewlog.Contracts.ApiRoutes.ClientLatest)
                 .GetAwaiter().GetResult();
-            if (latest?.SetupUrl is not { } setupUrl) return false;
+            if (latest?.SetupUrl is not { } setupUrl || latest.SetupSha256 is not { Length: 64 } setupHash) return false;
             config.InstallerAttemptAt = DateTimeOffset.UtcNow;
             config.LegacyExePath = exe;
             config.Save(AppPaths.Config);
@@ -96,6 +96,15 @@ internal static class AppInstall
             var setup = Path.Combine(Path.GetTempPath(), "Crewlog-Setup.exe");
             using (var fs = File.Create(setup))
                 http.GetStreamAsync(setupUrl).GetAwaiter().GetResult().CopyTo(fs);
+            using (var check = File.OpenRead(setup))
+            {
+                var got = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(check));
+                if (!got.Equals(setupHash, StringComparison.OrdinalIgnoreCase))
+                {
+                    log.Warn("The downloaded installer doesn't match the release's hash; not running it");
+                    return false;
+                }
+            }
             log.Info($"Moving from the portable copy {exe} to the installed app ({setup} --silent)");
             using (var p = Process.Start(new ProcessStartInfo(setup, "--silent") { UseShellExecute = false }))
             {

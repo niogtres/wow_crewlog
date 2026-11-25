@@ -69,7 +69,8 @@ public sealed record ReleaseInfo(
     string AddonSha256,
     DateTimeOffset PublishedAt,
     string? Notes,
-    string? SetupUrl = null);
+    string? SetupUrl = null,
+    string? SetupSha256 = null);
 
 /// <summary>The caller's toons and journals, for the client's Characters window (toons × journals checklist).</summary>
 public sealed record JournalsResponse(IReadOnlyList<ToonInfo> Toons, IReadOnlyList<JournalInfo> Journals);

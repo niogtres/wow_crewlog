@@ -179,14 +179,17 @@ public static class InboxWriter
         return sb.ToString();
     }
 
-    /// <summary>A Lua string literal; anything outside printable ASCII is escaped as decimal bytes (UTF-8).</summary>
-    internal static string Str(string s)
+    /// <summary>A Lua string literal; anything outside printable ASCII is escaped as decimal bytes (UTF-8). A "|" is
+    /// doubled: it starts the game's escape codes (colours, textures, links), and the text comes from other players
+    /// (toon names, quest titles, journal titles), so it shows as itself rather than painting the game's UI.</summary>
+    internal static string Str(string? s)
     {
         var sb = new StringBuilder("\"");
-        foreach (var b in Encoding.UTF8.GetBytes(s))
+        foreach (var b in Encoding.UTF8.GetBytes(s ?? ""))
         {
             switch (b)
             {
+                case (byte)'|': sb.Append("||"); break;
                 case (byte)'"': sb.Append("\\\""); break;
                 case (byte)'\\': sb.Append("\\\\"); break;
                 case (byte)'\n': sb.Append("\\n"); break;

@@ -23,7 +23,8 @@ public class InboxWriterTests
             [
                 new InboxJournal("Tuesday \"crew\"", [
                     new InboxToon("Player-1-B", "Brögg", "Bob", 12, "Warrior", "Durotar", false,
-                        [new InboxQuest(789, "Sting of the Scorpid", 0, 1, false), new InboxQuest(4641, "Your Place", 0, 0, true)],
+                        [new InboxQuest(789, "Sting of the Scorpid", 0, 1, false), new InboxQuest(4641, "Your Place", 0, 0, true),
+                         new InboxQuest(1, "Sting |TInterface:2000|t", 0, 0, false)],
                         DateTimeOffset.FromUnixTimeSeconds(1700000100), [788, 789]),
                 ], [new InboxPick(790, "Sarkoth", 5, "Brogg, Ashka", "Hana'zua · Durotar (40.6, 62.6)")],
                 new InboxRoute(1411, "Durotar", [
@@ -48,6 +49,8 @@ public class InboxWriterTests
             Assert.Equal(1700000000, inbox["harvestAck"].AsLong());
             var journal = inbox["journals"].AsTable()![1].AsTable()!;
             Assert.Equal("Tuesday \"crew\"", journal["title"].AsString());
+            // A crewmate's "|" (the game's escape codes) is written doubled, so the game shows it as text.
+            Assert.Contains("Sting ||TInterface:2000||t", File.ReadAllText(path));
             var toon = journal["toons"].AsTable()![1].AsTable()!;
             Assert.Equal(12, toon["level"].AsInt());
             Assert.Equal(1700000100, toon["updated"].AsLong());

@@ -7,6 +7,9 @@
 -- Full snapshots (debounced 1.5 s after a change, plus a 45 s heartbeat) are simpler and more forgiving than
 -- deltas: a lost message is fixed by the next snapshot. Own messages echo back, so peers are keyed by GUID and
 -- our own GUID is ignored. Live data lives in memory only; the server stays the record.
+-- Trust: a message counts only on the group's channels, for a GUID that is in the group, sent by that member (anyone
+-- can whisper an addon message, and a member could claim another's GUID). Received text is shown escaped, and how
+-- much one peer can send and make us send is capped.
 local _, ns = ...
 local U, S = ns.U, ns.Store
 local Live = {}
@@ -17,6 +20,8 @@ Live.MAX_BYTES = 250
 Live.SPACING = 0.3
 Live.DEBOUNCE = 1.5
 Live.HEARTBEAT = 45
+Live.MAX_QUESTS = 60      -- per peer snapshot (a quest log holds 25)
+Live.HELLO_EVERY = 10     -- seconds: answer hellos (and new peers) at most this often
 Live.peers = {}      -- [guid] = { name, level, classId, quests = { [id] = { title, ready, o = { {h, n}, ... } } }, at }
 Live.listeners = {}  -- functions() called when peer data or the roster changed
 
@@ -25,6 +30,7 @@ local gen = 0
 local mySig = ""
 local queue, pumping = {}, false
 local syncPending = false
+local lastAnswer = -math.huge
 local lastRoster = {}
 
 -- Counters for /cl status, so a party test shows where messages stop: refused by the game, not relayed by the
@@ -98,6 +104,8 @@ end
 
 function Live.sync()
   if not Live.channel() or not myGuid then return end
+  -- A new snapshot replaces any older one still waiting to go out (a hello stays).
+  for i = #queue, 1, -1 do if queue[i].m:sub(1, 1) ~= "H" then table.remove(queue, i) end end
   gen = gen + 1
   local head = "L|" .. myGuid .. "|" .. gen .. "|"
   local level = UnitLevel and UnitLevel("player") or 0
@@ -132,36 +140,77 @@ end
 
 -- Receiving ----------------------------------------------------------------------------------
 
+-- Text from another player, made safe to show: "|" starts the game's escape codes (colours, textures, links), so it
+-- is doubled to show as itself; cut to a sane length.
+local function shown(s, max) return (s:sub(1, max):gsub("|", "||")) end
+
 local function parseRecord(r)
   local id, ready, objs, title = r:match("^(%d+),([01]),([%d/:]*),(.*)$")
   if not id then return end
-  local q = { title = title ~= "" and title or nil, ready = ready == "1", o = {} }
-  for h, n in objs:gmatch("(%d+)/(%d+)") do q.o[#q.o + 1] = { h = tonumber(h), n = tonumber(n) } end
+  local q = { title = title ~= "" and shown(title, 60) or nil, ready = ready == "1", o = {} }
+  for h, n in objs:gmatch("(%d+)/(%d+)") do
+    if #q.o < 20 then q.o[#q.o + 1] = { h = tonumber(h), n = tonumber(n) } end
+  end
   return tonumber(id), q
 end
 
-function Live.handle(msg)
+local GROUP_CHANNELS = { PARTY = true, RAID = true, INSTANCE_CHAT = true }
+
+-- The group unit with this GUID, if any.
+local function unitOf(guid)
+  local n = GetNumGroupMembers and GetNumGroupMembers() or 0
+  local raid = IsInRaid and IsInRaid()
+  for i = 1, n do
+    local u = raid and ("raid" .. i) or ("party" .. i)
+    if UnitGUID(u) == guid then return u end
+  end
+end
+
+--- Whether a message about this GUID can be believed: it came over the group's channel, the GUID is a member, and the
+--- sender ("Name" or "Name-Realm") is that member.
+function Live.trusted(guid, channel, sender)
+  if not GROUP_CHANNELS[channel or ""] then return false end
+  local unit = unitOf(guid)
+  if not unit then return false end
+  local name = UnitName(unit)
+  local short = sender and sender:match("^([^%-]+)")
+  return name ~= nil and short ~= nil and short == name
+end
+
+-- Answering costs messages (the game throttles them): hellos and new peers get a snapshot at most every few seconds.
+local function answer()
+  local now = U.now()
+  if now - lastAnswer < Live.HELLO_EVERY then return end
+  lastAnswer = now
+  Live.schedule(false)
+end
+
+function Live.handle(msg, channel, sender)
   local cmd, guid, rest = msg:match("^(%u)|([^|]+)|?(.*)$")
   if not cmd then return end
   if guid == myGuid then Live.stats.echoed = Live.stats.echoed + 1 return end -- our own messages come back to us
+  if not Live.trusted(guid, channel, sender) then Live.stats.ignored = (Live.stats.ignored or 0) + 1 return end
   Live.stats.received = Live.stats.received + 1
   if cmd == "H" then
-    Live.schedule(false) -- a newcomer: send them our log
+    answer() -- a newcomer: send them our log
     return
   end
   local peer = Live.peers[guid]
   if cmd == "B" then
     local g, name, level, classId = rest:match("^(%d+)|([^|]*)|(%d*)|(%d*)$")
     if not g then return end
-    if not peer then peer = { quests = {} }; Live.peers[guid] = peer; Live.schedule(false) end
-    peer.name, peer.level, peer.classId = name, tonumber(level), tonumber(classId)
-    peer.pendingGen, peer.pending = g, {}
+    if not peer then peer = { quests = {} }; Live.peers[guid] = peer; answer() end
+    peer.name, peer.level, peer.classId = shown(name, 24), tonumber(level), tonumber(classId)
+    peer.pendingGen, peer.pending, peer.pendingCount = g, {}, 0
   elseif cmd == "L" then
     local g, body = rest:match("^(%d+)|(.*)$")
     if not (peer and g and peer.pendingGen == g) then return end
     for r in body:gmatch("[^;]+") do
       local id, q = parseRecord(r)
-      if id then peer.pending[id] = q end
+      if id and not peer.pending[id] and peer.pendingCount < Live.MAX_QUESTS then
+        peer.pending[id] = q
+        peer.pendingCount = peer.pendingCount + 1
+      end
     end
   elseif cmd == "E" then
     if not (peer and peer.pendingGen == rest and peer.pending) then return end
@@ -309,10 +358,10 @@ for _, e in ipairs({ "CHAT_MSG_ADDON", "GROUP_ROSTER_UPDATE", "QUEST_LOG_UPDATE"
   "QUEST_REMOVED", "NAME_PLATE_UNIT_ADDED", "NAME_PLATE_UNIT_REMOVED" }) do
   frame:RegisterEvent(e)
 end
-frame:SetScript("OnEvent", function(_, event, a1, a2)
+frame:SetScript("OnEvent", function(_, event, a1, a2, a3, a4)
   if not myGuid then return end
   if event == "CHAT_MSG_ADDON" then
-    if a1 == Live.PREFIX then Live.handle(a2 or "") end
+    if a1 == Live.PREFIX then Live.handle(a2 or "", a3, a4) end
   elseif event == "GROUP_ROSTER_UPDATE" then
     Live.onRoster()
   elseif event == "NAME_PLATE_UNIT_ADDED" then

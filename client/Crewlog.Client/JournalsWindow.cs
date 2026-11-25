@@ -135,8 +135,9 @@ internal sealed class JournalsWindow : Form
         }
     }
 
-    private static void Open(string url)
+    private void Open(string url)
     {
+        if (!ServerPrompt.IsOnServer(url, _site)) return;   // only pages on the Crewlog server
         try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); } catch { /* no browser */ }
     }
 }

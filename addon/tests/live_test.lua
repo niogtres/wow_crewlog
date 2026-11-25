@@ -21,11 +21,16 @@ H.fire("PLAYER_LOGIN")
 H.advance(2)
 local db = CrewlogDB
 
+-- Messages as a group member sends them: over the group channel, from that member's name.
+local function nameOf(guid)
+  for _, m in ipairs(H.group.members) do if m[1] == guid then return m[2] end end
+  return "Someone"
+end
 local function deliver(list, asGuid)
   for _, m in ipairs(list) do
     local msg = m.msg
     if asGuid then msg = msg:gsub(st.guid:gsub("%-", "%%-"), asGuid) end
-    H.fire("CHAT_MSG_ADDON", m.prefix, msg, m.channel, "Someone")
+    H.fire("CHAT_MSG_ADDON", m.prefix, msg, m.channel, asGuid and nameOf(asGuid) or st.name)
   end
 end
 local function kinds(list)
@@ -114,6 +119,22 @@ H.sent = {}
 H.fire("CHAT_MSG_ADDON", "CL1", "H|" .. CARL, "PARTY", "Carl")
 H.advance(3)
 check(kinds(H.sent):find("BL"), "hello answered with a snapshot")
+
+-- 8b. Only the group's own members count: a stranger's whisper, a member posing as another, a GUID outside the
+-- group, all ignored; text with the game's escape codes shows as plain text.
+local STRANGER = "Player-6949-0BADBAD0"
+H.fire("CHAT_MSG_ADDON", "CL1", "B|" .. STRANGER .. "|1|Fake|60|1", "WHISPER", "Fake")
+H.fire("CHAT_MSG_ADDON", "CL1", "E|" .. STRANGER .. "|1", "WHISPER", "Fake")
+check(Live.peers[STRANGER] == nil, "a whisper from outside the group is ignored")
+H.fire("CHAT_MSG_ADDON", "CL1", "B|" .. STRANGER .. "|1|Fake|60|1", "PARTY", "Fake")
+check(Live.peers[STRANGER] == nil, "a GUID that isn't in the group is ignored")
+H.fire("CHAT_MSG_ADDON", "CL1", "B|" .. CARL .. "|500|Carl|60|1", "PARTY", "Brogg")
+check(Live.peers[CARL].pendingGen ~= "500", "a member can't speak for another member")
+H.fire("CHAT_MSG_ADDON", "CL1", "B|" .. CARL .. "|501|Carl|9|1", "PARTY", "Carl-Realm")
+H.fire("CHAT_MSG_ADDON", "CL1", "L|" .. CARL .. "|501|42,0,1/2,Big |TInterface\\Icons\\Spell:2000|t here", "PARTY", "Carl-Realm")
+H.fire("CHAT_MSG_ADDON", "CL1", "E|" .. CARL .. "|501", "PARTY", "Carl-Realm")
+check(Live.peers[CARL].quests[42] and Live.peers[CARL].quests[42].title:find("||T", 1, true) ~= nil
+  and not Live.peers[CARL].quests[42].title:find("[^|]|T"), "escape codes in a title are shown as text")
 
 -- 9. Crew window: live party on top, shared quests marked, journal duplicates collapsed.
 Crewlog_Inbox = { journals = { { title = "Tuesday crew", toons = { { guid = BOB, name = "Brogg", quests = {} } } } } }
