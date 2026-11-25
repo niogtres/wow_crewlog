@@ -1,6 +1,16 @@
 namespace Crewlog.Contracts;
 
 /// <summary>Routes and JSON shapes of the client ↔ server API (DESIGN §8.2). Version 1 only grows additively.</summary>
+/// <summary>
+/// Headers the app sends with every call, so the website knows a PC's versions without waiting for WoW to save:
+/// its own version is in the User-Agent ("Crewlog-Client/0.8.17"), the addon installed on disk in this one.
+/// </summary>
+public static class ApiHeaders
+{
+    public const string ClientProduct = "Crewlog-Client";
+    public const string AddonVersion = "X-Crewlog-Addon";
+}
+
 public static class ApiRoutes
 {
     public const string DeviceStart = "/api/v1/auth/device/start";

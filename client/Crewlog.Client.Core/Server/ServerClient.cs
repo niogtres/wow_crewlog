@@ -20,11 +20,14 @@ public sealed class ServerClient(HttpClient http)
 {
     public static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { Converters = { new JsonStringEnumConverter() } };
 
-    public static ServerClient Create(string baseUrl, string? token = null)
+    /// <param name="addonVersion">The addon installed on disk, sent with every call (ApiHeaders) so the website sees the
+    /// PC's versions while WoW is closed; null when there's none.</param>
+    public static ServerClient Create(string baseUrl, string? token = null, string? addonVersion = null)
     {
         var http = new HttpClient { BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/"), Timeout = TimeSpan.FromSeconds(60) };
-        http.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Crewlog-Client", typeof(ServerClient).Assembly.GetName().Version?.ToString(3) ?? "0"));
+        http.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(ApiHeaders.ClientProduct, typeof(ServerClient).Assembly.GetName().Version?.ToString(3) ?? "0"));
         if (token is not null) http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        if (addonVersion is not null) http.DefaultRequestHeaders.TryAddWithoutValidation(ApiHeaders.AddonVersion, addonVersion);
         return new ServerClient(http);
     }
 

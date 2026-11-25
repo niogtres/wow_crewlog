@@ -53,7 +53,7 @@ internal sealed class TrayApp : ApplicationContext
         _config = AppConfig.Load(AppPaths.Config);
         _token = _tokens.Load();
         _engine = new SyncEngine(new SyncStateStore(AppPaths.State), _log,
-            () => _token is null ? null : ServerClient.Create(_config.ServerUrl, _token));
+            () => _token is null ? null : ServerClient.Create(_config.ServerUrl, _token, InstalledAddon()));
         _link = new ToolStripMenuItem("", null, (_, _) => LinkOrUnlink());
         _updater = new Updater(new HttpClient { Timeout = TimeSpan.FromMinutes(5) }, _log);
         Updater.CleanupAfterUpdate(Environment.ProcessPath);
@@ -67,7 +67,7 @@ internal sealed class TrayApp : ApplicationContext
         _updateTimer.Start();
 
         // Crew data for the in-game view, between your own syncs: every 2 min while WoW runs, else every 15 min.
-        _crew = new Core.Inbox.InboxRefresher(_log, () => _token is null ? null : ServerClient.Create(_config.ServerUrl, _token));
+        _crew = new Core.Inbox.InboxRefresher(_log, () => _token is null ? null : ServerClient.Create(_config.ServerUrl, _token, InstalledAddon()));
         _crewTimer.Tick += (_, _) =>
         {
             if (_flavor is not { } flavor || _token is null) return;
@@ -333,6 +333,9 @@ internal sealed class TrayApp : ApplicationContext
     /// - the app (installed through Crewlog-Setup.exe): Velopack downloads the new version (only what changed) and
     ///   restarts into it. Portable development copies don't update.
     /// </summary>
+    /// <summary>The addon version installed in WoW's folder (read from its .toc), sent with every call.</summary>
+    private string? InstalledAddon() => _flavor is { } f ? Updater.InstalledAddonVersion(f) : null;
+
     private async Task CheckForUpdates(bool manual)
     {
         if (_updating) return;
@@ -427,7 +430,7 @@ internal sealed class TrayApp : ApplicationContext
             return;
         }
         if (_journals is { IsDisposed: false }) { _journals.Activate(); return; }
-        _journals = new JournalsWindow(ServerClient.Create(_config.ServerUrl, _token), _config.ServerUrl, WindowIcon());
+        _journals = new JournalsWindow(ServerClient.Create(_config.ServerUrl, _token, InstalledAddon()), _config.ServerUrl, WindowIcon());
         _journals.Show();
     }
 
