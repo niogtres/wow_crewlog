@@ -56,8 +56,8 @@ flowchart LR
 | `client/Crewlog.Client.Cli` | `crewlog` command-line tool for debugging (dump, locate, watch, link, push). |
 | `client/Crewlog.Client.Tests` | xUnit tests for the app. |
 | `shared/Crewlog.Contracts` | The JSON shapes the app and the website exchange. |
-| `tools/` | Addon packing and the brand assets (installer splash, tray icon). |
-| `docs/` | `forever-api.md` (what the Forever client's addon API offers), brand assets. |
+| `tools/pack-addon.ps1` | Packs the addon folders into the zip players install. |
+| `docs/` | `forever-api.md` (what the Forever client's addon API offers) and the app's icons. |
 
 ## Building and testing
 
