@@ -63,6 +63,26 @@ public static class InboxWriter
         return ack;
     }
 
+    // A route as a Lua table: { map = , zone = , stops = { ... } }, without a line break after the closing brace.
+    private static void Route(StringBuilder sb, InboxRoute route, string indent)
+    {
+        sb.Append("{ map = ").Append(route.UiMapId).Append(", zone = ").Append(Str(route.Zone)).AppendLine(", stops = {");
+        foreach (var st in route.Stops)
+        {
+            sb.Append(indent).Append("  { n = ").Append(st.N)
+              .Append(", x = ").Append(st.X.ToString("0.#", CultureInfo.InvariantCulture))
+              .Append(", y = ").Append(st.Y.ToString("0.#", CultureInfo.InvariantCulture))
+              .Append(", place = ").Append(Str(st.Place));
+            if (st.CityMap is { } cm && st.CityX is { } cx && st.CityY is { } cy)
+                sb.Append(", cityMap = ").Append(cm)
+                  .Append(", cx = ").Append(cx.ToString("0.#", CultureInfo.InvariantCulture))
+                  .Append(", cy = ").Append(cy.ToString("0.#", CultureInfo.InvariantCulture));
+            sb.Append(", tasks = { ")
+              .Append(string.Join(", ", st.Tasks.Select(Str))).AppendLine(" } },");
+        }
+        sb.Append(indent).Append("} }");
+    }
+
     public static string Render(IReadOnlyDictionary<string, long> ack, long? harvestAck, InboxResponse? crew, DateTimeOffset now)
     {
         var sb = new StringBuilder();
@@ -115,25 +135,24 @@ public static class InboxWriter
                 }
                 if (j.Route is { Stops.Count: > 0 } route)
                 {
-                    sb.Append(", route = { map = ").Append(route.UiMapId).Append(", zone = ").Append(Str(route.Zone)).AppendLine(", stops = {");
-                    foreach (var st in route.Stops)
-                    {
-                        sb.Append("      { n = ").Append(st.N)
-                          .Append(", x = ").Append(st.X.ToString("0.#", CultureInfo.InvariantCulture))
-                          .Append(", y = ").Append(st.Y.ToString("0.#", CultureInfo.InvariantCulture))
-                          .Append(", place = ").Append(Str(st.Place));
-                        if (st.CityMap is { } cm && st.CityX is { } cx && st.CityY is { } cy)
-                            sb.Append(", cityMap = ").Append(cm)
-                              .Append(", cx = ").Append(cx.ToString("0.#", CultureInfo.InvariantCulture))
-                              .Append(", cy = ").Append(cy.ToString("0.#", CultureInfo.InvariantCulture));
-                        sb.Append(", tasks = { ")
-                          .Append(string.Join(", ", st.Tasks.Select(Str))).AppendLine(" } },");
-                    }
-                    sb.Append("    } }");
+                    sb.Append(", route = ");
+                    Route(sb, route, "    ");
                 }
                 sb.AppendLine(" },");
             }
             sb.AppendLine("  },");
+            if (crew.Routes is { Count: > 0 } routes)
+            {
+                // Each of your toons' own route ("Just me" in game), by toon.
+                sb.AppendLine("  routes = {");
+                foreach (var r in routes.Where(r => r.Route.Stops.Count > 0))
+                {
+                    sb.Append("    [").Append(Str(r.Guid)).Append("] = ");
+                    Route(sb, r.Route, "    ");
+                    sb.AppendLine(",");
+                }
+                sb.AppendLine("  },");
+            }
             if (crew.Next is { Count: > 0 } next)
             {
                 // "Next up" per own toon and zone; the addon shows the zone the player is in.

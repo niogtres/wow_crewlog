@@ -92,20 +92,20 @@ function UI.MenuItems()
   }
 end
 
--- "Route on map": one choice per journal that has a route, plus Clear. A submenu in the game's own menu; the
--- fallback menu lists the choices inline.
+-- "Route on map": the toon's own route ("Just me") and one choice per journal that has a route, plus Clear. A submenu
+-- in the game's own menu; the fallback menu lists the choices inline.
 function UI.RouteItem()
   local Route = ns.Route
   local children = {}
   for _, j in ipairs(Route.journals()) do
-    local title = j.title
-    children[#children + 1] = { text = title, hint = #j.route.stops .. " stops in " .. j.route.zone,
-      isOn = function() return Route.selected() == title end,
-      run = function() if Route.selected() == title then Route.clear() else Route.show(title) end end }
+    local key = j.key
+    children[#children + 1] = { text = j.title, hint = #j.route.stops .. " stops in " .. j.route.zone,
+      isOn = function() return Route.selected() == key end,
+      run = function() if Route.selected() == key then Route.clear() else Route.show(key) end end }
   end
   if #children == 0 then
-    children[1] = { text = "No routes yet", hint = "sync with your crew's quests in one zone", run = function()
-      say("no journal route yet. Routes come from the Crewlog app after a sync (they need quests in one zone).")
+    children[1] = { text = "No routes yet", hint = "sync with quests in your log", run = function()
+      say("no route yet. Routes come from the Crewlog app after a sync (they need quests in one zone).")
     end }
   end
   if Route.selected() then children[#children + 1] = { text = "Clear route", run = function() Route.clear() end } end

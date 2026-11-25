@@ -130,6 +130,30 @@ check(ns.UI.Menu(UIParent) == "native", "the game's own menu when it exists")
 check(built[1] == "title:Crewlog" and built[5] == "button:Route on map" and built[6] == "radio:Tuesday crew:false"
   and built[7] == "check:Member colours:true" and built[8] == "check:Markers over party:false", "native menu: title, buttons, route submenu, checkboxes with state: " .. table.concat(built, ","))
 MenuUtil = nil
+
+-- The toon's own route ("Just me", the toon page's map) comes first; another toon's own route isn't offered.
+Crewlog_Inbox.routes = {
+  [me] = { map = 1411, zone = "Durotar", stops = {
+    { n = 1, x = 51.2, y = 40.8, place = "Gornek", tasks = { "Turn in Your Place" } },
+    { n = 2, x = 44.0, y = 60.0, place = "Sarkoth", tasks = { "Sarkoth for Sarkoth" } },
+    { n = 3, x = 42.9, y = 69.2, place = "Zureetha Fargaze", tasks = { "Pick up Vile Familiars" } },
+  } },
+  ["Player-1-MYALT"] = { map = 1412, zone = "Mulgore", stops = { { n = 1, x = 50, y = 50, place = "Bloodhoof", tasks = { "x" } } } },
+}
+local routes = ns.Route.journals()
+check(#routes == 2 and routes[1].title == "Just me" and routes[1].key == ns.Route.SOLO and routes[2].title == "Tuesday crew",
+  "own route first, then the journals")
+local item = ns.UI.RouteItem().children[1]
+check(item.text == "Just me" and item.hint == "3 stops in Durotar" and not item.isOn(), "menu offers Just me")
+item.run()
+check(db.ui.route == ns.Route.SOLO and #ns.Route.current().stops == 3, "Just me shows the toon's own route")
+check(H.chat[#H.chat]:find("Your own route is on your map: 3 stop(s) in Durotar", 1, true), "says it's your own route")
+check(ns.UI.RouteItem().children[1].isOn(), "Just me ticked while shown")
+ns.UI.RouteItem().children[1].run()
+check(db.ui.route == nil and ns.Route.current() == nil, "picking it again clears it")
+Crewlog_Inbox.routes = nil
+check(#ns.Route.journals() == 1, "no own route without one from the app")
+
 GameTooltip.lines = {}
 ns.UI.Tooltip(GameTooltip)
 check(table.concat(GameTooltip.lines, "\n"):find("for the menu", 1, true), "tooltip explains the click")

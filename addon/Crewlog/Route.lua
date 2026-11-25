@@ -1,6 +1,7 @@
--- A journal's suggested route (the website's route map) on the world map: numbered stops joined by a line, with what
--- to do at each in the tooltip. The Crewlog app writes the routes into Crewlog_Inbox; which journal to show is picked
--- from the compass menu and kept per account. Drawn only on the route's own zone map.
+-- A suggested route (the website's route map) on the world map: numbered stops joined by a line, with what to do at
+-- each in the tooltip. Either a journal's route or the toon's own ("Just me", the toon page's map). The Crewlog app
+-- writes the routes into Crewlog_Inbox; which one to show is picked from the compass menu and kept per account (for
+-- "Just me" that is always the toon you're playing). Drawn only on the route's own zone map.
 local ADDON, ns = ...
 local Route = {}
 ns.Route = Route
@@ -20,23 +21,36 @@ local function hasToon(j, guid)
   return false
 end
 
---- Journals the toon you're playing is in that came with a route from the app: { { title, route }, ... }.
+--- Key of the toon's own route in the saved choice; journals are kept by title.
+Route.SOLO = "@me"
+
+--- The routes this toon can show: its own first ("Just me"), then the journals it is in that came with a route from
+--- the app: { { key, title, route }, ... }.
 function Route.journals()
   local list = {}
   local me = ns.Collector and ns.Collector.guid()
-  for _, j in ipairs((inbox() or {}).journals or {}) do
-    if j.route and j.route.stops and #j.route.stops > 0 and hasToon(j, me) then list[#list + 1] = { title = j.title, route = j.route } end
+  local box = inbox() or {}
+  local own = me and box.routes and box.routes[me]
+  if own and own.stops and #own.stops > 0 then list[1] = { key = Route.SOLO, title = "Just me", route = own } end
+  for _, j in ipairs(box.journals or {}) do
+    if j.route and j.route.stops and #j.route.stops > 0 and hasToon(j, me) then
+      list[#list + 1] = { key = j.title, title = j.title, route = j.route }
+    end
   end
   return list
 end
 
---- The route being shown (nil when none is picked, or that journal has no route right now).
+local function find(key)
+  for _, j in ipairs(Route.journals()) do
+    if j.key == key then return j end
+  end
+end
+
+--- The route being shown (nil when none is picked, or that one has no route right now).
 function Route.current()
   local pick = db and db.ui.route
-  if not pick then return nil end
-  for _, j in ipairs(Route.journals()) do
-    if j.title == pick then return j.route end
-  end
+  local j = pick and find(pick)
+  return j and j.route
 end
 
 function Route.selected() return db and db.ui.route end
@@ -45,13 +59,15 @@ local function refresh()
   if provider and provider:GetMap() then provider:RefreshAllData() end
 end
 
-function Route.show(title)
-  db.ui.route = title
-  local r = Route.current()
+function Route.show(key)
+  db.ui.route = key
+  local j = find(key)
+  local r = j and j.route
+  local whose = key == Route.SOLO and "Your own" or ((j and j.title or key) .. "'s")
   if r then
-    say(string.format("%s's route is on your map: %d stop(s) in %s. Open the map (M) at %s.", title, #r.stops, r.zone, r.zone))
+    say(string.format("%s route is on your map: %d stop(s) in %s. Open the map (M) at %s.", whose, #r.stops, r.zone, r.zone))
   else
-    say(title .. " has no route right now.")
+    say((key == Route.SOLO and "You have" or key .. " has") .. " no route right now.")
   end
   refresh()
 end

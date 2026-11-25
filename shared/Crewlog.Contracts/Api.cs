@@ -70,7 +70,11 @@ public sealed record JournalInfo(Guid Id, string Title, string OwnerName, bool I
 /// What the client writes into the Crewlog_Inbox addon (DESIGN §5): acks so the addon can prune, plus the journal
 /// crew's current quests for the in-game crew view.
 /// </summary>
-public sealed record InboxResponse(DateTimeOffset GeneratedAt, IReadOnlyList<InboxJournal> Journals, IReadOnlyList<InboxNext>? Next = null);
+public sealed record InboxResponse(DateTimeOffset GeneratedAt, IReadOnlyList<InboxJournal> Journals, IReadOnlyList<InboxNext>? Next = null,
+    IReadOnlyList<InboxToonRoute>? Routes = null);
+
+/// <summary>A toon's own route ("Just me" in game): its quests and pick-ups, the website's toon page map.</summary>
+public sealed record InboxToonRoute(string Guid, InboxRoute Route);
 
 /// <summary>"Next up" for one of your toons in one zone (the addon shows the zone you're in).</summary>
 public sealed record InboxNext(string Guid, int AreaId, int? UiMapId, string Zone, IReadOnlyList<InboxSuggestion> Quests);

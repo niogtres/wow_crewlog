@@ -31,7 +31,11 @@ public class InboxWriterTests
                     new InboxStop(2, 45, 56, "Vile Familiar", ["Vile Familiar for Vile Familiars", "Turn in Sarkoth"], 1454, 80.77, 23.7),
                 ])),
             ],
-            [new InboxNext("Player-1-A", 14, 1411, "Durotar", [new InboxSuggestion(792, "Vile Familiars", 4, true, "unlocks 1 more", "Zureetha Fargaze")])]);
+            [new InboxNext("Player-1-A", 14, 1411, "Durotar", [new InboxSuggestion(792, "Vile Familiars", 4, true, "unlocks 1 more", "Zureetha Fargaze")])],
+            [new InboxToonRoute("Player-1-A", new InboxRoute(1411, "Durotar", [
+                new InboxStop(1, 51.2, 40.8, "Gornek", ["Turn in Your Place"]),
+                new InboxStop(2, 44, 60, "Sarkoth", ["Sarkoth for Sarkoth"]),
+            ]))]);
             var path = InboxWriter.Write(flavor, resp, crew)!;
 
             // A second account in the same install acks its own toon; the first ack stays.
@@ -63,6 +67,10 @@ public class InboxWriterTests
             Assert.Contains("cx = 80.8, cy = 23.7", File.ReadAllText(path));
             Assert.True(stops[1].AsTable()!["cityMap"].IsNil);
             Assert.Equal("Turn in Sarkoth", stops[2].AsTable()!["tasks"].AsTable()![2].AsString());
+            var own = inbox["routes"].AsTable()!["Player-1-A"].AsTable()!;              // the toon's own route ("Just me")
+            Assert.Equal(1411, own["map"].AsInt());
+            Assert.Equal("Durotar", own["zone"].AsString());
+            Assert.Equal("Sarkoth for Sarkoth", own["stops"].AsTable()![2].AsTable()!["tasks"].AsTable()![1].AsString());
             var next = inbox["next"].AsTable()![1].AsTable()!;
             Assert.Equal(1411, next["uiMap"].AsInt());
             var suggestion = next["quests"].AsTable()![1].AsTable()!;
