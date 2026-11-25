@@ -44,6 +44,11 @@ flowchart LR
 - **Windows app** (`client/`): a tray app. It watches the SavedVariables file, uploads changes, writes the
   `Crewlog_Inbox` addon (acks so the addon can prune, plus the journal crew's quests and routes), installs and
   updates the addon, and updates itself (Velopack installer, delta updates).
+- **The website, https://crewlog.dk:** where you sign in with Discord, link the app, and create or join journals.
+  It keeps each toon's quest log as last synced, shows your crew's quests live, suggests what to pick up next from
+  [QuestieDB](https://github.com/Questie/QuestieDB)'s quest data, and draws a journal's suggested route. It also
+  hands the app its updates and the addon. The website's code isn't published; what it stores and who sees it is
+  described in [SECURITY.md](.github/SECURITY.md). Issues about the website are welcome here too.
 
 ## Repository
 
