@@ -145,7 +145,10 @@ public class SavedVariablesWatcherTests
         var seen = new List<string>();
         watcher.Changed += p => { lock (seen) seen.Add(p); };
         watcher.RescanAll();
-        await Task.Delay(500);
-        Assert.Equal([Path.Combine(sv, "Crewlog.lua")], seen);
+        // Wait for the debounced report (a busy CI runner can take well over the 100 ms), then a little longer so a
+        // stray second report would show.
+        for (var waited = 0; waited < 5000 && seen.Count == 0; waited += 50) await Task.Delay(50);
+        await Task.Delay(300);
+        lock (seen) Assert.Equal([Path.Combine(sv, "Crewlog.lua")], seen);
     }
 }
