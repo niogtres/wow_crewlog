@@ -2,6 +2,11 @@
 
 What changed in the Crewlog app and addon, newest first.
 
+## 0.8.19 — 2026-11-26
+- Website and addon: Get in step. For each toon, the few things to do on your own so you're on the same quests as most of your crew: hand in or finish an earlier part of a chain, pick a quest up, or reach a level. On the journal page and the toon page, and in game first on the Next up tab, where each one ticks off as soon as you've done it. The minimap button's tooltip says how many are left.
+- Website and addon: quests that share a name along a chain show which part they are, like Arugal's Folly (part 2), so crewmates on different steps no longer look like they're on the same quest.
+- Website and addon: a quest that several NPCs can give or take (a class quest any trainer hands out) points to one of your own faction, not to Thunder Bluff for a dwarf.
+
 ## 0.8.18 — 2026-11-25
 - Addon: party sync only counts messages from the members of your group, each about themselves.
 - App and addon: toon names and quest titles from other players are shown as plain text, game colour and picture codes included.
