@@ -133,6 +133,19 @@ public static class InboxWriter
                     }
                     sb.Append("    }");
                 }
+                if (j.InStep is { Count: > 0 } inStep)
+                {
+                    sb.AppendLine(", instep = {");
+                    foreach (var x in inStep)
+                    {
+                        sb.Append("      { guid = ").Append(Str(x.Guid)).Append(", kind = ").Append(Str(x.Kind))
+                          .Append(", id = ").Append(x.Id).Append(", title = ").Append(Str(x.Title)).Append(", level = ").Append(x.Level);
+                        if (x.Where is { } w) sb.Append(", where = ").Append(Str(w));
+                        if (x.For is { } f) sb.Append(", goal = ").Append(Str(f));
+                        sb.AppendLine(" },");
+                    }
+                    sb.Append("    }");
+                }
                 if (j.Route is { Stops.Count: > 0 } route)
                 {
                     sb.Append(", route = ");

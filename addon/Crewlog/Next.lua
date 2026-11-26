@@ -33,8 +33,51 @@ function Next.pick(data, myGuid, uiMap)
   return first, false
 end
 
+-- Get in step: what this toon can do on its own to join what the rest of each journal is on (the website's "Get in
+-- step"). Checked against the game right now, so a step you've just done shows as done before the next sync.
+local VERB = { handin = "Hand in ", finish = "Finish ", pickup = "Pick up " }
+
+local function stepDone(s)
+  if s.kind == "level" then return (UnitLevel and UnitLevel("player") or 0) >= (s.level or 0) end
+  if s.kind == "pickup" then return inLog(s.id) or completed(s.id) end
+  return completed(s.id)
+end
+
+-- How many steps this toon still has (for the minimap tooltip).
+function Next.stepsLeft(data, myGuid)
+  local n = 0
+  for _, j in ipairs((data and data.journals) or {}) do
+    for _, s in ipairs(j.instep or {}) do
+      if s.guid == myGuid and not stepDone(s) then n = n + 1 end
+    end
+  end
+  return n
+end
+
+function Next.stepLines(out, data, myGuid)
+  for _, j in ipairs((data and data.journals) or {}) do
+    local mine = {}
+    for _, s in ipairs(j.instep or {}) do if s.guid == myGuid then mine[#mine + 1] = s end end
+    if #mine > 0 then
+      out[#out + 1] = GOLD .. "Get in step|r " .. MUTED .. "· " .. (j.title or "journal") .. "|r"
+      for _, s in ipairs(mine) do
+        local what = s.kind == "level" and ("Reach level " .. tostring(s.level or "?")) or ((VERB[s.kind] or "") .. (s.title or ("Quest " .. s.id)))
+        if stepDone(s) then
+          out[#out + 1] = string.format("  %s✓ %s|r", MUTED, what)
+        else
+          out[#out + 1] = "  " .. WHITE .. what .. "|r"
+          if s.where then out[#out + 1] = "      " .. MUTED .. s.where .. "|r" end
+          if s.goal then out[#out + 1] = "      " .. TEAL .. s.goal .. "|r" end
+        end
+      end
+      out[#out + 1] = " "
+    end
+  end
+end
+
 function Next.lines(data, myGuid, uiMap)
   local out = {}
+  Next.stepLines(out, data, myGuid)
   local n, here = Next.pick(data, myGuid, uiMap)
   if not n then
     out[#out + 1] = MUTED .. "No suggestions for this toon yet. Click the compass to sync, then open this again."

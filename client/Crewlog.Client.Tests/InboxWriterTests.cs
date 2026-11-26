@@ -30,7 +30,9 @@ public class InboxWriterTests
                 new InboxRoute(1411, "Durotar", [
                     new InboxStop(1, 42.9, 69.24, "Zureetha Fargaze", ["Pick up Vile Familiars (Brögg)"]),
                     new InboxStop(2, 45, 56, "Vile Familiar", ["Vile Familiar for Vile Familiars", "Turn in Sarkoth"], 1454, 80.77, 23.7),
-                ])),
+                ]),
+                [new InboxInStep("Player-1-A", "handin", 422, "Arugal's Folly (part 1)", 10, "Deathstalker Faerleia · Silverpine Forest (43.4, 40.9)",
+                    "for Arugal's Folly (part 2) with Tawkin")]),
             ],
             [new InboxNext("Player-1-A", 14, 1411, "Durotar", [new InboxSuggestion(792, "Vile Familiars", 4, true, "unlocks 1 more", "Zureetha Fargaze")])],
             [new InboxToonRoute("Player-1-A", new InboxRoute(1411, "Durotar", [
@@ -61,6 +63,12 @@ public class InboxWriterTests
             Assert.Contains(@"\195\182", File.ReadAllText(path)); // "ö" as UTF-8 bytes, readable by WoW's Lua
             Assert.Equal(789, toon["doneIds"].AsTable()![2].AsInt());              // crewmate has done these of my quests
             Assert.Equal(790, journal["together"].AsTable()![1].AsTable()!["id"].AsInt());
+            var step = journal["instep"].AsTable()![1].AsTable()!;                  // Get in step for my toons
+            Assert.Equal("handin", step["kind"].AsString());
+            Assert.Equal(422, step["id"].AsInt());
+            Assert.Equal("Arugal's Folly (part 1)", step["title"].AsString());
+            Assert.StartsWith("Deathstalker Faerleia", step["where"].AsString());
+            Assert.Equal("for Arugal's Folly (part 2) with Tawkin", step["goal"].AsString());
             var route = journal["route"].AsTable()!;                                  // the route for the in-game map
             Assert.Equal(1411, route["map"].AsInt());
             var stops = route["stops"].AsTable()!;

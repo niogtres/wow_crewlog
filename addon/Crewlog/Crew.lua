@@ -151,6 +151,11 @@ function Crew.tooltip(tt, myGuid)
     end
   end
   local data = inbox()
+  local steps = ns.Next and ns.Next.stepsLeft(data, myGuid) or 0
+  if steps > 0 then
+    tt:AddLine(" ")
+    tt:AddLine(GOLD .. "Get in step|r " .. MUTED .. string.format("%d thing%s to do on your own · Next up", steps, steps == 1 and "" or "s"))
+  end
   local mates = Crew.mates(data, myGuid)
   if #mates == 0 then return end
   local mine = Crew.myQuests()

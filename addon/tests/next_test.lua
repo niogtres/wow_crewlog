@@ -39,6 +39,12 @@ Crewlog_Inbox = {
         { guid = me, name = "Zarnokk", mine = true, quests = {} },
       },
       together = { { id = 790, title = "Sarkoth", level = 5, who = "Brogg, Ashka", giver = "Hana'zua" } },
+      instep = {
+        { guid = me, kind = "handin", id = 4641, title = "Your Place In The World", level = 1, where = "Kaltunk · Durotar (43.3, 68.5)", goal = "for Cutting Teeth with Brogg" },
+        { guid = me, kind = "pickup", id = 789, title = "Sting of the Scorpid", level = 3, goal = "with Brogg" },
+        { guid = me, kind = "level", id = 805, title = "Report to Sen'jin Village", level = 99, goal = "for Report to Sen'jin Village with Brogg" },
+        { guid = "Player-1-BROGG", kind = "pickup", id = 1, title = "Brogg's own step", level = 1 },
+      },
       route = { map = 1411, zone = "Durotar", stops = {
         { n = 1, x = 42.9, y = 69.2, place = "Zureetha Fargaze", tasks = { "Pick up Vile Familiars (Brogg)" } },
         { n = 2, x = 45.1, y = 56.0, place = "Vile Familiar", tasks = { "Vile Familiar for Vile Familiars (Brogg, Ashka)" } },
@@ -57,6 +63,14 @@ check(text:find("Sting of the Scorpid  in your log", 1, true), "a quest you've a
 check(text:find("Vile Familiars", 1, true) and text:find("soon", 1, true) and text:find("Zureetha Fargaze", 1, true) and text:find("unlocks 1 more", 1, true),
   "open suggestions show level, soon, giver and why")
 check(not text:find("Not mine", 1, true), "only this toon's suggestions")
+check(text:find("Get in step", 1, true) and text:find("Tuesday crew", 1, true), "Get in step comes with the journal's name")
+check(text:find("Hand in Your Place In The World", 1, true) and text:find("Kaltunk", 1, true) and text:find("for Cutting Teeth with Brogg", 1, true),
+  "a step shows what, where and what it leads to")
+check(text:find("✓ Pick up Sting of the Scorpid", 1, true), "a step done since the sync (picked up) shows as done")
+check(text:find("Reach level 99", 1, true), "a level step")
+check(not text:find("Brogg's own step", 1, true), "only this toon's steps")
+check(text:find("Get in step", 1, true) < text:find("Next up in Durotar", 1, true), "Get in step comes first")
+check(ns.Next.stepsLeft(Crewlog_Inbox, me) == 2, "two steps left for the tooltip")
 check(text:find("Pick up together", 1, true) and text:find("Sarkoth", 1, true) and text:find("Brogg, Ashka", 1, true), "journal pick-ups listed")
 
 st.map = 9999

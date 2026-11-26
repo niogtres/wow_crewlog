@@ -98,7 +98,13 @@ public sealed record InboxSuggestion(int Id, string Title, int Level, bool Soon,
 /// <summary>A quest two or more toons in the journal can pick up now.</summary>
 public sealed record InboxPick(int Id, string Title, int Level, string Who, string? Giver);
 
-public sealed record InboxJournal(string Title, IReadOnlyList<InboxToon> Toons, IReadOnlyList<InboxPick>? Together = null, InboxRoute? Route = null);
+public sealed record InboxJournal(string Title, IReadOnlyList<InboxToon> Toons, IReadOnlyList<InboxPick>? Together = null, InboxRoute? Route = null,
+    IReadOnlyList<InboxInStep>? InStep = null);
+
+/// <summary>Get in step: something one of your toons can do on its own to join what the rest of the journal is on.
+/// Kind: "handin", "finish", "pickup" or "level"; Id is the quest to act on (for "level", the quest that needs it).
+/// For: what it leads to ("for Arugal's Folly (part 2) with Tawkin").</summary>
+public sealed record InboxInStep(string Guid, string Kind, int Id, string Title, int Level, string? Where, string? For);
 
 /// <summary>The journal's suggested route (the website's route map) for the in-game world map: stops in one zone.</summary>
 public sealed record InboxRoute(int UiMapId, string Zone, IReadOnlyList<InboxStop> Stops);
