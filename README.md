@@ -29,13 +29,12 @@ Crewlog only uses the game's official addon interface: no automation, no memory 
 
 ```mermaid
 flowchart LR
-  subgraph PC["Player's PC (this repository)"]
-    A["Addon (Lua)<br/>addon/Crewlog"] -- "SavedVariables<br/>(on /reload, logout)" --> C["Windows app (.NET 10)<br/>client/Crewlog.Client"]
-    C -- "Inbox: acks + crew data<br/>(read on next /reload)" --> I["Crewlog_Inbox addon"]
-    A <-. "party addon messages (live)" .-> A2["Party members' addons"]
-  end
-  C -- "HTTPS API (device token)" --> S["crewlog.dk"]
-  W["Browser"] -- "Discord login, live pages" --> S
+  G["World of Warcraft: Forever<br/>with the Crewlog addon"] -- "your quests,<br/>each time you sync" --> P["Crewlog app<br/>on your PC"]
+  P -- "sends them" --> W["crewlog.dk"]
+  W -- "your crew's quests<br/>and the route" --> P
+  P -- "into the game,<br/>next time you sync" --> G
+  G <-. "live, while you're<br/>in a group" .-> F["Your group's<br/>Crewlog addons"]
+  B["You, in a browser"] --> W
 ```
 
 - **Addon** (`addon/Crewlog`): records quest events, harvests quest givers, syncs live with the party
