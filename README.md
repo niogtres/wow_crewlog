@@ -28,13 +28,14 @@ Crewlog only uses the game's official addon interface: no automation, no memory 
 ## How it fits together
 
 ```mermaid
-flowchart LR
-  G["World of Warcraft: Forever<br/>with the Crewlog addon"] -- "your quests,<br/>each time you sync" --> P["Crewlog app<br/>on your PC"]
-  P -- "sends them" --> W["crewlog.dk"]
-  W -- "your crew's quests<br/>and the route" --> P
-  P -- "into the game,<br/>next time you sync" --> G
-  G <-. "live, while you're<br/>in a group" .-> F["Your group's<br/>Crewlog addons"]
-  B["You, in a browser"] --> W
+flowchart TD
+  A["<b>1. You play</b><br/>The Crewlog addon notes<br/>your quests and progress"]
+  B["<b>2. You sync</b><br/>Click the compass by the minimap:<br/>the app on your PC sends it to crewlog.dk"]
+  C["<b>3. crewlog.dk</b><br/>Puts your crew together and works out<br/>what to pick up and where to go"]
+  D["<b>4. Back in the game</b><br/>On the next sync the app brings it back:<br/>crew window, Next up, route on the map"]
+  E["<b>In a group</b><br/>Crewlog addons share<br/>progress live, no sync needed"]
+  A --> B --> C --> D
+  A -.- E
 ```
 
 - **Addon** (`addon/Crewlog`): records quest events, harvests quest givers, syncs live with the party
