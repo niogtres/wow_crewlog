@@ -71,12 +71,22 @@ Kill → `QUEST_WATCH_UPDATE(788)` + `UNIT_QUEST_LOG_CHANGED` + `UI_INFO_MESSAGE
 
 - `C_ChatInfo.RegisterAddonMessagePrefix("CREWLOGPROBE")` → `0` (success) on the first call and `1` (already registered) on the second, so it returns an enum, not a boolean.
 - `C_ChatInfo.SendAddonMessage(prefix, msg, "WHISPER", "Zarnokk")` → `0`, but the server answered *"No player named 'Zarnokk' is currently playing"*, and `CHAT_MSG_ADDON` never arrived. Whispering yourself by bare name fails. That's probably the empty realm name; try `UnitName` + `"-"` + `GetNormalizedRealmName()`, or skip self-whispers altogether.
-- **PARTY/RAID is not tested yet** (the character was solo). This is the main open risk for live sync.
+- **Group messages work** (settled with live party sync, addon 0.5.0): prefix `CL1` on `PARTY`, `RAID` or
+  `INSTANCE_CHAT`, whichever group you're in (`addon/Crewlog/Live.lua`). Crewlog never whispers, so the self-whisper
+  problem above doesn't matter.
 - Available helpers: `C_EncodingUtil.SerializeCBOR` / `CompressString`, which are handy for compact messages and SavedVariables. `C_Timer`, `Settings.RegisterCanvasLayoutCategory` and `C_AddOns.GetAddOnMetadata` are also present.
 
-## Still to verify (probe 0.0.2 / during M1)
+## Settled since the probe
 
-1. **Party addon messages** between two clients (needs a second player).
-2. **Quest lines:** call `RequestQuestLinesForMap`, wait for `QUESTLINE_UPDATE`, then read `GetAvailableQuestLines` / `GetQuestLineQuests`. Test in a zone with a story chain, not the starting valley.
-3. `GetAllCompletedQuestIDs()` size and speed on a high-level character (hundreds of IDs).
-4. Whether TOC file-name suffixes (`_Mainline`, `_Vanilla`, …) are honoured. A plain `<Name>.toc` works, so this is not a blocker.
+- **Party addon messages** between clients: they work (see *Addon messages*).
+- **`GetAllCompletedQuestIDs()`** is what the addon reads for every snapshot (`Collector.lua`). It's sent to the app
+  only when its hash changes, so a long list costs little. Nobody has timed it on a level-60 character, but it has
+  caused no trouble so far.
+- **TOC file names:** a plain `<Name>.toc` with `## Interface: 16001` is all Crewlog ships, and it loads. Whether
+  suffixes such as `_Mainline` or `_Vanilla` are honoured was never needed, so it's still untested.
+
+## Still open
+
+- **Quest lines:** call `RequestQuestLinesForMap`, wait for `QUESTLINE_UPDATE`, then read `GetAvailableQuestLines` /
+  `GetQuestLineQuests`. Test in a zone with a story chain, not the starting valley. Crewlog doesn't need it: quest
+  chains come from QuestieDB.
