@@ -13,4 +13,8 @@ open an issue first so we can agree on the approach. Some ground rules:
 - **Tests:** `dotnet test Crewlog.slnx` and the Lua tests in `addon/tests` (see the README). Add a test with your change.
 - **Changelog:** add a line to [CHANGELOG.md](CHANGELOG.md), written for players, not developers.
 
+**How pull requests land:** this repository is published from the maintainer's working copy, and `main` takes no
+direct pushes or merges. A pull request that's accepted is applied there with you as the commit's author, published,
+and then closed with a link to the commit.
+
 By contributing you agree that your contribution is licensed under the [GPL-3.0](LICENSE), like the rest of the project.
