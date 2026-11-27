@@ -18,7 +18,7 @@ with the website. The website and its server at crewlog.dk are not part of it.
 - **Journals:** share with friends. Everyone sees what each other's toons are on, who can join a quest and who has
   done it, plus quests you could pick up together. Invite by link or key, optional password.
 - **In game:** a compass by the minimap syncs with one click; `/cl` shows your journal crew, `/cl next` what to pick
-  up next, quest tooltips show who else is on a quest or has done it, a suggested route (a journal's, or your toon's own) can be
+  up next (starting with what gets you in step with your crew's quests), quest tooltips show who else is on a quest or has done it, a suggested route (a journal's, or your toon's own) can be
   shown on the world map, and party members who run Crewlog see each other's progress live, within seconds. Member colours and
   markers over heads are opt-in.
 - **Accounts:** Discord login only. Pick a name and picture, add a short bio, delete toons or your whole account.
