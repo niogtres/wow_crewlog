@@ -85,8 +85,6 @@ by themselves.
 GPL-3.0, see [LICENSE](LICENSE). Created and maintained by Thomas Kraft.
 
 - Quest, NPC and object data: [QuestieDB](https://github.com/Questie/QuestieDB) (GPL-3.0).
-- Quest links and tooltips: [Wowhead](https://www.wowhead.com/forever).
-- Fonts: Bricolage Grotesque, Figtree and JetBrains Mono (SIL Open Font License).
 - Installer and updates: [Velopack](https://velopack.io).
 
 Crewlog is a fan project and is not affiliated with or endorsed by Blizzard Entertainment. World of Warcraft is a
