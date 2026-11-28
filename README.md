@@ -1,4 +1,4 @@
-# Crewlog
+<img src=".github/banner.png" alt="Crewlog: group questing, made easy. The website and the in-game addon window." width="100%">
 
 [![Tests](https://github.com/niogtres/wow_crewlog/actions/workflows/test.yml/badge.svg)](https://github.com/niogtres/wow_crewlog/actions/workflows/test.yml)
 [![Latest release](https://img.shields.io/github/v/release/niogtres/wow_crewlog?label=release)](https://github.com/niogtres/wow_crewlog/releases/latest)
