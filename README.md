@@ -27,16 +27,7 @@ Crewlog only uses the game's official addon interface: no automation, no memory 
 
 ## How it fits together
 
-```mermaid
-flowchart TD
-  A["<b>1. You play</b><br/>The Crewlog addon notes<br/>your quests and progress"]
-  B["<b>2. You sync</b><br/>Click the compass by the minimap:<br/>the app on your PC sends it to crewlog.dk"]
-  C["<b>3. crewlog.dk</b><br/>Puts your crew together and works out<br/>what to pick up and where to go"]
-  D["<b>4. Back in the game</b><br/>On the next sync the app brings it back:<br/>crew window, Next up, route on the map"]
-  E["<b>In a group</b><br/>Crewlog addons share<br/>progress live, no sync needed"]
-  A --> B --> C --> D
-  A -.- E
-```
+<img src=".github/how-it-works.png" alt="How Crewlog fits together, as a four-panel comic. 1. You play: the Crewlog addon notes your quests and progress. In a group, Crewlog addons share progress live, no sync needed. 2. You sync: click the compass by the minimap, and the app on your PC sends it to crewlog.dk. 3. crewlog.dk puts your crew together and works out what to pick up and where to go. 4. Back in the game: on the next sync the app brings it back: crew window, Next up, route on the map." width="100%">
 
 - **Addon** (`addon/Crewlog`): records quest events, harvests quest givers, syncs live with the party
   (`Live.lua`), shows the crew window and the journal route on the world map. Data leaves the game only through
