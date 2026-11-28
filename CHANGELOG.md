@@ -2,6 +2,10 @@
 
 What changed in the Crewlog app and addon, newest first.
 
+## 0.9.0 — 2026-11-28
+- Website and addon: one crewmate can sync for the group. While you're grouped, a journal crewmate's sync can also carry your toon's current quests, progress, turn-ins, level and position to the website, so it stays up to date without everyone clicking the compass. Both sides opt in: you allow it in your toon's settings on the website, and the crewmate turns on "Upload my party's progress" in the compass menu (or /cl relay). Your addon signs what it shares with a key only your PC and the website know, so nothing can be changed or made up on the way, and only crewmates in a journal you share can carry it. The website shows it as "synced … via <name>", and your own next sync replaces it.
+- Addon: party members' addons now also share where each of you stands and the quests you turned in this session.
+
 ## 0.8.19 — 2026-11-26
 - Website and addon: Get in step. For each toon, the few things to do on your own so you're on the same quests as most of your crew: hand in or finish an earlier part of a chain, pick a quest up, or reach a level. On the journal page and the toon page, and in game first on the Next up tab, where each one ticks off as soon as you've done it. The minimap button's tooltip says how many are left.
 - Website and addon: quests that share a name along a chain show which part they are, like Arugal's Folly (part 2), so crewmates on different steps no longer look like they're on the same quest.
