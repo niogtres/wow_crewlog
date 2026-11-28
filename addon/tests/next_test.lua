@@ -179,8 +179,11 @@ check(#segs == 5, "two walked bits, a flight, a straight leg and a clamped one: 
 check(segs[1][3] == 20 and segs[1][4] == 15 and segs[3][1] == 12, "path points in order")
 check(segs[4][1] == 30 and segs[4][2] == 10 and segs[4][4] == 40, "no path: straight from the stop before")
 check(segs[5][3] == 100, "a point off the map is kept on its edge")
-check(ns.Route.strataAbove("HIGH") == "DIALOG" and ns.Route.strataAbove("FULLSCREEN_DIALOG") == "FULLSCREEN_DIALOG"
-  and ns.Route.strataAbove(nil) == "DIALOG", "route pins go one layer above the map, never over tooltips")
+local function mapWith(mgr) return { GetPinFrameLevelsManager = function() return mgr end } end
+check(ns.Route.topLevel(mapWith({ maxLevel = 2400 })) == 2410, "route pins sit just above the map's highest pin layer")
+check(ns.Route.topLevel(mapWith({ GetValidFrameLevel = function(_, t) return t == "PIN_FRAME_LEVEL_TOPMOST" and 2300 or 2000 end })) == 2310,
+  "... or above the topmost layer when the manager doesn't say its maximum")
+check(ns.Route.topLevel(nil) == 2010 and ns.Route.topLevel(mapWith({ maxLevel = 9500 })) == 9000, "a sane level without a manager, never past the cap")
 
 GameTooltip.lines = {}
 ns.UI.Tooltip(GameTooltip)

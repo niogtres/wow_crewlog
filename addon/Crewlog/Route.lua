@@ -107,26 +107,25 @@ function CrewlogRoutePinMixin:OnLoad()
   self:SetScript("OnLeave", self.OnMouseLeave)
 end
 
--- Above every other pin on the map (the game's quest markers, other addons' pins), so the numbers can always be read:
--- one frame strata above the map's own (those markers sit in a higher layer than any frame level reaches) and a
--- high level within it.
-local STRATA = { "BACKGROUND", "LOW", "MEDIUM", "HIGH", "DIALOG", "FULLSCREEN", "FULLSCREEN_DIALOG" }
-local ON_TOP = 2000
+-- Above every other pin on the map (the game's quest markers, other addons' pins), so the numbers can always be read.
+-- The map gives each kind of pin an absolute frame level from its pin-level manager (2000 and up; quest markers among
+-- the highest), and re-applies it on every move and zoom through ApplyFrameLevel. So we take the manager's top level
+-- (PIN_FRAME_LEVEL_TOPMOST, the layer reserved for this) plus a margin, every time.
+local ABOVE_TOP = 10
 
---- The strata one above the given one (FULLSCREEN_DIALOG at most, never TOOLTIP).
-function Route.strataAbove(strata)
-  for i, s in ipairs(STRATA) do
-    if s == strata then return STRATA[math.min(i + 1, #STRATA)] end
+--- The frame level for our pins, from the map's pin-level manager: just above its highest layer.
+function Route.topLevel(map)
+  local mgr = map and map.GetPinFrameLevelsManager and map:GetPinFrameLevelsManager()
+  local top = mgr and tonumber(mgr.maxLevel)
+  if not top and mgr and mgr.GetValidFrameLevel then
+    local ok, level = pcall(mgr.GetValidFrameLevel, mgr, "PIN_FRAME_LEVEL_TOPMOST", 1)
+    top = ok and tonumber(level) or nil
   end
-  return "DIALOG"
+  return math.min((top or 2000) + ABOVE_TOP, 9000)
 end
 
 function CrewlogRoutePinMixin:ApplyFrameLevel()
-  local canvas = self:GetParent()
-  local map = WorldMapFrame
-  if self.SetFrameStrata and map and map.GetFrameStrata then self:SetFrameStrata(Route.strataAbove(map:GetFrameStrata())) end
-  local base = canvas and canvas.GetFrameLevel and canvas:GetFrameLevel() or 0
-  self:SetFrameLevel(math.min(base + ON_TOP, 9000))
+  self:SetFrameLevel(Route.topLevel(self.GetMap and self:GetMap() or WorldMapFrame))
 end
 
 function CrewlogRoutePinMixin:OnAcquired(stop, x, y)
