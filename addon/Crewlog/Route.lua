@@ -85,7 +85,6 @@ CrewlogRoutePinMixin = CreateFromMixins and MapCanvasPinMixin and CreateFromMixi
 function CrewlogRoutePinMixin:OnLoad()
   self:SetSize(22, 22)
   if self.SetScalingLimits then self:SetScalingLimits(1, 0.9, 1.3) end
-  if self.UseFrameLevelType then pcall(self.UseFrameLevelType, self, "PIN_FRAME_LEVEL_AREA_POI") end
   local ring = self:CreateTexture(nil, "BACKGROUND")
   ring:SetAllPoints()
   ring:SetColorTexture(0.09, 0.15, 0.19, 1)
@@ -108,11 +107,21 @@ function CrewlogRoutePinMixin:OnLoad()
   self:SetScript("OnLeave", self.OnMouseLeave)
 end
 
+-- Above every other pin on the map (quest markers, other addons' pins), so the numbers can always be read: a fixed
+-- level over the map canvas instead of one of the map's own pin layers.
+local ON_TOP = 2000
+function CrewlogRoutePinMixin:ApplyFrameLevel()
+  local canvas = self:GetParent()
+  local base = canvas and canvas.GetFrameLevel and canvas:GetFrameLevel() or 0
+  self:SetFrameLevel(math.min(base + ON_TOP, 9000))
+end
+
 function CrewlogRoutePinMixin:OnAcquired(stop, x, y)
   if not self.label then self:OnLoad() end
   self.stop = stop
   self.label:SetText(stop.n)
   self:SetPosition((x or stop.x) / 100, (y or stop.y) / 100)
+  self:ApplyFrameLevel()
 end
 
 function CrewlogRoutePinMixin:OnMouseEnter()
@@ -136,21 +145,42 @@ local function hideLines()
   for _, l in ipairs(lines) do l:Hide() end
 end
 
+local function clamp(v) return math.max(0, math.min(100, tonumber(v) or 0)) end
+
+--- The segments of the route, in zone coordinates: each leg along the ground (the path the website sends, around
+--- cliffs, mountains and water; a flight is a line of its own), or straight where there's no path.
+function Route.segments(stops)
+  local out = {}
+  for i = 2, #stops do
+    local a, b = stops[i - 1], stops[i]
+    local drawn = false
+    for _, line in ipairs(type(b.path) == "table" and b.path or {}) do
+      if type(line) == "table" then
+        for k = 3, #line - 1, 2 do
+          out[#out + 1] = { clamp(line[k - 2]), clamp(line[k - 1]), clamp(line[k]), clamp(line[k + 1]) }
+          drawn = true
+        end
+      end
+    end
+    if not drawn then out[#out + 1] = { a.x, a.y, b.x, b.y } end
+  end
+  return out
+end
+
 local function drawLines(map, stops)
   local canvas = map:GetCanvas()
   local w, h = canvas:GetWidth(), canvas:GetHeight()
   if not canvas.CreateLine or w == 0 then return end
-  for i = 2, #stops do
-    local l = lines[i - 1]
+  for i, seg in ipairs(Route.segments(stops)) do
+    local l = lines[i]
     if not l or l:GetParent() ~= canvas then
       l = canvas:CreateLine(nil, "ARTWORK")
       l:SetThickness(3)
       l:SetColorTexture(0.89, 0.64, 0.10, 0.75)
-      lines[i - 1] = l
+      lines[i] = l
     end
-    local a, b = stops[i - 1], stops[i]
-    l:SetStartPoint("TOPLEFT", canvas, a.x / 100 * w, -a.y / 100 * h)
-    l:SetEndPoint("TOPLEFT", canvas, b.x / 100 * w, -b.y / 100 * h)
+    l:SetStartPoint("TOPLEFT", canvas, seg[1] / 100 * w, -seg[2] / 100 * h)
+    l:SetEndPoint("TOPLEFT", canvas, seg[3] / 100 * w, -seg[4] / 100 * h)
     l:Show()
   end
 end

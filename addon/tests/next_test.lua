@@ -168,6 +168,18 @@ check(db.ui.route == nil and ns.Route.current() == nil, "picking it again clears
 Crewlog_Inbox.routes = nil
 check(#ns.Route.journals() == 1, "no own route without one from the app")
 
+-- The line follows the ground where the app sent a path (a flight is its own line), straight where it didn't.
+local segs = ns.Route.segments({
+  { n = 1, x = 10, y = 10 },
+  { n = 2, x = 30, y = 10, path = { { 10, 10, 20, 15, 30, 10 }, { 12, 12, 28, 12 } } },
+  { n = 3, x = 30, y = 40 },
+  { n = 4, x = 50, y = 50, path = { { 30, 40, 120, 50 } } },
+})
+check(#segs == 5, "two walked bits, a flight, a straight leg and a clamped one: " .. #segs)
+check(segs[1][3] == 20 and segs[1][4] == 15 and segs[3][1] == 12, "path points in order")
+check(segs[4][1] == 30 and segs[4][2] == 10 and segs[4][4] == 40, "no path: straight from the stop before")
+check(segs[5][3] == 100, "a point off the map is kept on its edge")
+
 GameTooltip.lines = {}
 ns.UI.Tooltip(GameTooltip)
 check(table.concat(GameTooltip.lines, "\n"):find("for the menu", 1, true), "tooltip explains the click")

@@ -29,7 +29,8 @@ public class InboxWriterTests
                 ], [new InboxPick(790, "Sarkoth", 5, "Brogg, Ashka", "Hana'zua · Durotar (40.6, 62.6)")],
                 new InboxRoute(1411, "Durotar", [
                     new InboxStop(1, 42.9, 69.24, "Zureetha Fargaze", ["Pick up Vile Familiars (Brögg)"]),
-                    new InboxStop(2, 45, 56, "Vile Familiar", ["Vile Familiar for Vile Familiars", "Turn in Sarkoth"], 1454, 80.77, 23.7),
+                    new InboxStop(2, 45, 56, "Vile Familiar", ["Vile Familiar for Vile Familiars", "Turn in Sarkoth"], 1454, 80.77, 23.7,
+                        [[42.9, 69.2, 44.04, 62.5, 45, 56], [1, 2]]),
                 ]),
                 [new InboxInStep("Player-1-A", "handin", 422, "Arugal's Folly (part 1)", 10, "Deathstalker Faerleia · Silverpine Forest (43.4, 40.9)",
                     "for Arugal's Folly (part 2) with Tawkin")]),
@@ -77,6 +78,10 @@ public class InboxWriterTests
             Assert.Equal(1454, stops[2].AsTable()!["cityMap"].AsInt());                 // a stop in Orgrimmar, off Durotar's map
             Assert.Contains("cx = 80.8, cy = 23.7", File.ReadAllText(path));
             Assert.True(stops[1].AsTable()!["cityMap"].IsNil);
+            var leg = stops[2].AsTable()!["path"].AsTable()!;                            // the way there along the ground
+            Assert.Equal(6, leg[1].AsTable()!.Count);
+            Assert.True(leg[2].IsNil);                                                    // a broken line is left out
+            Assert.Contains("{ 42.9, 69.2, 44, 62.5, 45, 56 }", File.ReadAllText(path));
             Assert.Equal("Turn in Sarkoth", stops[2].AsTable()!["tasks"].AsTable()![2].AsString());
             var own = inbox["routes"].AsTable()!["Player-1-A"].AsTable()!;              // the toon's own route ("Just me")
             Assert.Equal(1411, own["map"].AsInt());

@@ -77,6 +77,9 @@ public static class InboxWriter
                 sb.Append(", cityMap = ").Append(cm)
                   .Append(", cx = ").Append(cx.ToString("0.#", CultureInfo.InvariantCulture))
                   .Append(", cy = ").Append(cy.ToString("0.#", CultureInfo.InvariantCulture));
+            if (st.Path is { Count: > 0 } path)
+                sb.Append(", path = { ").Append(string.Join(", ", path.Where(l => l.Count >= 4 && l.Count % 2 == 0)
+                    .Select(l => "{ " + string.Join(", ", l.Select(v => v.ToString("0.#", CultureInfo.InvariantCulture))) + " }"))).Append(" }");
             sb.Append(", tasks = { ")
               .Append(string.Join(", ", st.Tasks.Select(Str))).AppendLine(" } },");
         }

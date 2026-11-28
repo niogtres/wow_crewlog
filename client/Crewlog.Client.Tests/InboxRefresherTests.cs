@@ -33,6 +33,11 @@ public class InboxRefresherTests
            "quests":[{"id":789,"title":"Sting of the Scorpid","done":{{done}},"total":1,"ready":false}],"updatedAt":"2026-11-23T21:59:00Z"}]}]}
         """;
 
+    private const string RouteJson = """
+        ,"routes":[{"guid":"Player-1-A","route":{"uiMapId":1411,"zone":"Durotar","stops":[
+          {"n":1,"x":50,"y":50,"place":"Gornek","tasks":["Turn in Your Place"]}]}}]}
+        """;
+
     [Fact]
     public async Task Pulls_on_schedule_writes_only_changes_and_keeps_acks()
     {
@@ -57,7 +62,11 @@ public class InboxRefresherTests
             Assert.False(await refresher.RefreshAsync(flavor, t0.AddMinutes(2))); // nothing new: no rewrite
             fake.Body = Crew(1);
             Assert.True(await refresher.RefreshAsync(flavor, t0.AddMinutes(4)));  // a crewmate progressed
-            Assert.Equal(3, fake.Calls);
+            fake.Body = Crew(1).TrimEnd()[..^1] + RouteJson;
+            Assert.True(await refresher.RefreshAsync(flavor, t0.AddMinutes(6)));  // only your own route changed
+            Assert.False(await refresher.RefreshAsync(flavor, t0.AddMinutes(8)));
+            Assert.True(await refresher.RefreshAsync(flavor, t0.AddMinutes(16))); // the same, but the copy there is 10 min old
+            Assert.Equal(6, fake.Calls);
 
             var inbox = SavedVariablesParser.ParseFile(Path.Combine(inboxDir, "Data.lua"))["Crewlog_Inbox"].AsTable()!;
             Assert.Equal(7, inbox["ack"].AsTable()!["Player-1-A"].AsInt());      // acks survive
