@@ -114,8 +114,9 @@ public sealed record InboxRoute(int UiMapId, string Zone, IReadOnlyList<InboxSto
 
 /// <summary>A route stop: number, zone coordinates (0–100), the place, and what to do there (one line per task).
 /// A stop in a capital beyond the zone's map edge also carries the city's map and its coordinates there.
-/// Path (0.9.1+): the way here from the stop before along the ground, as lines of x, y pairs in zone coordinates (a
-/// flight is a line of its own); null where the zone has no navigation grid, and for the first stop.</summary>
+/// Path (0.9.1+): the way here along the ground from the stop before (for the first stop, from where the route starts),
+/// as lines of x, y pairs in zone coordinates (a flight is a line of its own); null where the zone has no navigation
+/// grid.</summary>
 public sealed record InboxStop(int N, double X, double Y, string Place, IReadOnlyList<string> Tasks,
     int? CityMap = null, double? CityX = null, double? CityY = null, IReadOnlyList<IReadOnlyList<double>>? Path = null);
 

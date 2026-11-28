@@ -33,7 +33,7 @@ CrewlogDB = {
   harvest = { quests = { [4641] = { t = st.time - 800, title = "old" }, [788] = { t = st.time - 100, title = "kept" } } },
 }
 
-local ns = H.load("Crewlog", { "Util.lua", "Sign.lua", "Store.lua", "Harvest.lua", "Collector.lua", "Live.lua", "Crew.lua", "Next.lua", "Tooltips.lua", "Way.lua", "Route.lua", "UI.lua", "Core.lua" })
+local ns = H.load("Crewlog", { "Util.lua", "Sign.lua", "Store.lua", "Harvest.lua", "Collector.lua", "Live.lua", "Crew.lua", "Next.lua", "Tooltips.lua", "Way.lua", "Route.lua", "Arrow.lua", "UI.lua", "Core.lua" })
 H.fire("ADDON_LOADED", "Crewlog")
 H.fire("PLAYER_LOGIN")
 local db = CrewlogDB

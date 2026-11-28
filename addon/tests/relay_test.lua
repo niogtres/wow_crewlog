@@ -54,7 +54,7 @@ st.log = { { header = "Durotar" } }
 H.addQuest(789, "Sting of the Scorpid", 3, { { 4, 10, false, "item", "Scorpid Worker Tail" } })
 H.addQuest(4641, "Your Place In The World", 1, {})
 CrewlogDB = nil
-local ns = H.load("Crewlog", { "Util.lua", "Sign.lua", "Store.lua", "Harvest.lua", "Collector.lua", "Live.lua", "Crew.lua", "Next.lua", "Tooltips.lua", "Way.lua", "Route.lua", "UI.lua", "Core.lua" })
+local ns = H.load("Crewlog", { "Util.lua", "Sign.lua", "Store.lua", "Harvest.lua", "Collector.lua", "Live.lua", "Crew.lua", "Next.lua", "Tooltips.lua", "Way.lua", "Route.lua", "Arrow.lua", "UI.lua", "Core.lua" })
 local Live, Sign = ns.Live, ns.Sign
 H.fire("ADDON_LOADED", "Crewlog")
 H.fire("PLAYER_LOGIN")

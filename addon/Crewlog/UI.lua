@@ -115,7 +115,13 @@ function UI.RouteItem()
       say("no route yet. Routes come from the Crewlog app after a sync (they need quests in one zone).")
     end }
   end
-  if Route.selected() then children[#children + 1] = { text = "Clear route", run = function() Route.clear() end } end
+  if Route.selected() then
+    children[#children + 1] = { text = "Next 3 stops", hint = Route.hasMore() and "the three after these" or "no more stops",
+      run = function() Route.nextThree() end }
+    children[#children + 1] = { text = "Arrow to the next stop", isOn = function() return ns.Arrow.on() end,
+      run = function() ns.Arrow.setOn(not ns.Arrow.on()) end }
+    children[#children + 1] = { text = "Clear route", run = function() Route.clear() end }
+  end
   return { text = "Route on map", children = children }
 end
 

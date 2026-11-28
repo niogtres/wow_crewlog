@@ -14,7 +14,7 @@ H.addQuest(789, "Sting of the Scorpid", 3, { { 2, 10, false, "item", "Scorpid Wo
 st.map = 1411 -- Durotar
 CrewlogDB = nil
 
-local ns = H.load("Crewlog", { "Util.lua", "Sign.lua", "Store.lua", "Harvest.lua", "Collector.lua", "Live.lua", "Crew.lua", "Next.lua", "Tooltips.lua", "Way.lua", "Route.lua", "UI.lua", "Core.lua" })
+local ns = H.load("Crewlog", { "Util.lua", "Sign.lua", "Store.lua", "Harvest.lua", "Collector.lua", "Live.lua", "Crew.lua", "Next.lua", "Tooltips.lua", "Way.lua", "Route.lua", "Arrow.lua", "UI.lua", "Core.lua" })
 H.fire("ADDON_LOADED", "Crewlog")
 H.fire("PLAYER_LOGIN")
 H.advance(1)
@@ -168,17 +168,74 @@ check(db.ui.route == nil and ns.Route.current() == nil, "picking it again clears
 Crewlog_Inbox.routes = nil
 check(#ns.Route.journals() == 1, "no own route without one from the app")
 
--- The line follows the ground where the app sent a path (a flight is its own line), straight where it didn't.
-local segs = ns.Route.segments({
-  { n = 1, x = 10, y = 10 },
-  { n = 2, x = 30, y = 10, path = { { 10, 10, 20, 15, 30, 10 }, { 12, 12, 28, 12 } } },
-  { n = 3, x = 30, y = 40 },
-  { n = 4, x = 50, y = 50, path = { { 30, 40, 120, 50 } } },
-})
-check(#segs == 5, "two walked bits, a flight, a straight leg and a clamped one: " .. #segs)
-check(segs[1][3] == 20 and segs[1][4] == 15 and segs[3][1] == 12, "path points in order")
-check(segs[4][1] == 30 and segs[4][2] == 10 and segs[4][4] == 40, "no path: straight from the stop before")
-check(segs[5][3] == 100, "a point off the map is kept on its edge")
+-- Three stops at a time: the way to each along the ground where the app sent a path (a flight is its own line),
+-- straight from the stop before where it didn't, nothing to the first without one.
+local five = {
+  { n = 1, x = 10, y = 10, place = "One", path = { { 5, 5, 10, 10 } } },
+  { n = 2, x = 30, y = 10, place = "Two", path = { { 10, 10, 20, 15, 30, 10 }, { 12, 12, 28, 12 } } },
+  { n = 3, x = 30, y = 40, place = "Three" },
+  { n = 4, x = 50, y = 50, place = "Four", path = { { 30, 40, 120, 50 } } },
+  { n = 5, x = 60, y = 60, place = "Five" },
+}
+local legs = ns.Route.legs(five, 1)
+check(#legs == 3 and legs[1][1] == 1 and legs[2][1] == 2 and legs[3][1] == 3, "three legs: green, blue, grey")
+check(#legs[1][2] == 1 and #legs[2][2] == 3 and #legs[3][2] == 1, "the first leg's path, two walked bits and a flight, one straight line")
+check(legs[2][2][1][3] == 20 and legs[2][2][1][4] == 15 and legs[2][2][3][1] == 12, "path points in order")
+check(legs[3][2][1][1] == 30 and legs[3][2][1][2] == 10 and legs[3][2][1][4] == 40, "no path: straight from the stop before")
+legs = ns.Route.legs(five, 4)
+check(#legs == 2 and legs[1][1] == 1 and legs[1][2][1][3] == 100, "the next three: stop 4 is green now, a point off the map sits on its edge")
+check(#ns.Route.legs({ { n = 1, x = 1, y = 1 } }, 1)[1][2] == 0, "no line to a first stop without a path")
+
+-- The arrow and the stops drawn move on as you get there.
+Crewlog_Inbox.routes = { [me] = { map = 1411, zone = "Durotar", stops = five } }
+ns.UI.RouteItem().children[1].run()
+local function window() local out = {} for _, w in ipairs(ns.Route.window()) do out[#out + 1] = w.index .. ":" .. w.slot end return table.concat(out, " ") end
+check(window() == "1:1 2:2 3:3" and select(2, ns.Route.target()) == 1, "starts with stops 1-3, the arrow on 1")
+check(H.chat[#H.chat]:find("three at a time, with an arrow", 1, true), "says how it works")
+local function routeMenu(text) for _, c in ipairs(ns.UI.RouteItem().children) do if c.text == text then return c end end end
+local menu = ns.UI.RouteItem().children
+check(menu[#menu - 2].text == "Next 3 stops" and menu[#menu - 1].text == "Arrow to the next stop" and menu[#menu - 1].isOn()
+  and menu[#menu].text == "Clear route", "menu: the routes, then next 3, the arrow, clear")
+st.pos = { 0.70, 0.70 }
+check(ns.Arrow.tick() == "far" and select(2, ns.Route.target()) == 1, "far away: the arrow keeps pointing to 1")
+st.pos = { 0.102, 0.101 }
+check(ns.Arrow.tick() == "here" and select(2, ns.Route.target()) == 2 and window() == "1:1 2:2 3:3", "at stop 1: the arrow moves on to 2")
+ns.Route.reached()   -- right-click: skip 2
+st.pos = { 0.30, 0.40 }
+check(ns.Arrow.tick() == "here" and window() == "4:1 5:2" and select(2, ns.Route.target()) == 4, "past the third: the next three come up")
+check(H.chat[#H.chat]:find("on to the next stops: 4 to 5", 1, true), "and says so")
+check(not ns.Route.hasMore() and routeMenu("Next 3 stops").hint == "no more stops", "nothing after 4-5")
+st.pos = nil
+check(ns.Arrow.tick() == "off", "out of the zone: just where to go")
+ns.Route.reached(); ns.Route.reached()
+check(ns.Route.target() == nil and window() == "" and H.chat[#H.chat]:find("last stop", 1, true), "the route done")
+
+ns.UI.RouteItem().children[1].run()   -- clear
+ns.UI.RouteItem().children[1].run()   -- and pick it again: from the start
+check(window() == "1:1 2:2 3:3", "a route picked again starts over")
+ns.Route.nextThree()
+check(window() == "4:1 5:2" and select(2, ns.Route.target()) == 4, "Next 3 stops")
+ns.Route.nextThree()
+check(window() == "4:1 5:2" and H.chat[#H.chat]:find("no more stops", 1, true), "no more after the last three")
+Crewlog_Inbox.routes[me].stops = { five[1], five[2], five[3], five[4] }
+check(window() == "1:1 2:2 3:3", "a new route from the app (after a sync) starts over")
+routeMenu("Arrow to the next stop").run()
+check(not ns.Arrow.on() and not routeMenu("Arrow to the next stop").isOn(), "the arrow can be turned off")
+routeMenu("Arrow to the next stop").run()
+routeMenu("Clear route").run()
+check(db.ui.route == nil and db.ui.routeFrom == nil, "Clear route forgets where you were")
+Crewlog_Inbox.routes = nil
+
+-- Direction: counter-clockwise from north, from the world's coordinates when the game gives them.
+local h, a = ns.Arrow.heading(1411, 50, 50, 50, 40)
+check(h == nil and math.abs(a) < 1e-9, "north on the map, no yards without world positions")
+h, a = ns.Arrow.heading(1411, 50, 50, 40, 50)
+check(math.abs(a - math.pi / 2) < 1e-9, "west is a quarter turn left")
+CreateVector2D = function(x, y) return { x = x, y = y } end
+C_Map.GetWorldPosFromMapPos = function(_, v) return 1, { x = -v.y * 1000, y = -v.x * 1500 } end
+h, a = ns.Arrow.heading(1411, 50, 50, 50, 40)
+check(math.abs(h - 100) < 1e-6 and math.abs(a) < 1e-9, "yards from world positions: " .. tostring(h))
+CreateVector2D, C_Map.GetWorldPosFromMapPos = nil, nil
 local function mapWith(mgr) return { GetPinFrameLevelsManager = function() return mgr end } end
 check(ns.Route.topLevel(mapWith({ maxLevel = 2400 })) == 2410, "route pins sit just above the map's highest pin layer")
 check(ns.Route.topLevel(mapWith({ GetValidFrameLevel = function(_, t) return t == "PIN_FRAME_LEVEL_TOPMOST" and 2300 or 2000 end })) == 2310,
