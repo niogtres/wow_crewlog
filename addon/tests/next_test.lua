@@ -14,7 +14,7 @@ H.addQuest(789, "Sting of the Scorpid", 3, { { 2, 10, false, "item", "Scorpid Wo
 st.map = 1411 -- Durotar
 CrewlogDB = nil
 
-local ns = H.load("Crewlog", { "Util.lua", "Store.lua", "Harvest.lua", "Collector.lua", "Live.lua", "Crew.lua", "Next.lua", "Tooltips.lua", "Way.lua", "Route.lua", "UI.lua", "Core.lua" })
+local ns = H.load("Crewlog", { "Util.lua", "Sign.lua", "Store.lua", "Harvest.lua", "Collector.lua", "Live.lua", "Crew.lua", "Next.lua", "Tooltips.lua", "Way.lua", "Route.lua", "UI.lua", "Core.lua" })
 H.fire("ADDON_LOADED", "Crewlog")
 H.fire("PLAYER_LOGIN")
 H.advance(1)
@@ -114,9 +114,9 @@ local db = CrewlogDB
 local items = ns.UI.MenuItems()
 local names = {}
 for _, it in ipairs(items) do names[#names + 1] = it.text end
-check(table.concat(names, ",") == "Sync now,Crew,Next up,Route on map,Member colours,Markers over party,Hide minimap button", "menu items: " .. table.concat(names, ","))
+check(table.concat(names, ",") == "Sync now,Crew,Next up,Route on map,Member colours,Markers over party,Upload my party's progress,Hide minimap button", "menu items: " .. table.concat(names, ","))
 local kind, frame = ns.UI.Menu(UIParent)                       -- no MenuUtil in the harness: our own menu
-check(kind == "own" and frame and #frame.buttons == 7, "fallback menu with seven entries (route choices inline)")
+check(kind == "own" and frame and #frame.buttons == 8, "fallback menu with eight entries (route choices inline)")
 check(#ns.Route.journals() == 1 and ns.Route.journals()[1].title == "Tuesday crew", "only journals this toon is in offer a route")
 check(frame.buttons[4].label.text:find("Route on map: Tuesday crew", 1, true) and frame.buttons[4].label.text:find("2 stops in Durotar", 1, true),
   "fallback menu offers the journal's route")

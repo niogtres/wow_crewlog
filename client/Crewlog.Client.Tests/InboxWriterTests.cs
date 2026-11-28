@@ -93,4 +93,18 @@ public class InboxWriterTests
             Directory.Delete(flavor, true);
         }
     }
+    [Fact]
+    public void Writes_relay_keys_for_own_toons()
+    {
+        var crew = new InboxResponse(DateTimeOffset.UtcNow, [], RelayKeys: new Dictionary<string, string>
+        {
+            ["Player-1-A"] = "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff",
+            ["Player-1-B"] = "not hex\" injected",
+        });
+        var lua = InboxWriter.Render(new Dictionary<string, long>(), null, crew, DateTimeOffset.UtcNow);
+        var inbox = SavedVariablesParser.Parse(lua)["Crewlog_Inbox"].AsTable()!;
+        Assert.Equal("00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff", inbox["relayKeys"].AsTable()!["Player-1-A"].AsString());
+        Assert.Null(inbox["relayKeys"].AsTable()!["Player-1-B"].AsString());
+        Assert.DoesNotContain("relayKeys", InboxWriter.Render(new Dictionary<string, long>(), null, new InboxResponse(DateTimeOffset.UtcNow, []), DateTimeOffset.UtcNow));
+    }
 }

@@ -64,6 +64,8 @@ public sealed class SyncEngine(SyncStateStore store, ILog log, Func<ServerClient
                 log.Info($"  {c.Name} lvl {c.Level} {c.Race} {c.Class} · map {c.MapId} · {c.Completed.Count} completed · {c.Log.Count} in log · seq {c.Seq}");
             foreach (var e in fresh)
                 log.Info($"  + {names.GetValueOrDefault(e.CharacterGuid, e.CharacterGuid)} {EventText.Describe(e)}");
+            if (save.Relayed is { Count: > 0 } relayed)
+                log.Info($"  carrying party progress for {string.Join(", ", relayed.Select(r => r.Name ?? r.Guid))}");
             if (save.DroppedEvents > 0)
                 log.Warn($"  the addon dropped {save.DroppedEvents} old event(s) because the client was away too long");
 
@@ -74,6 +76,7 @@ public sealed class SyncEngine(SyncStateStore store, ILog log, Func<ServerClient
             {
                 var resp = await client.SyncAsync(save, ClientVersion, ct);
                 foreach (var w in resp.Warnings) log.Warn("  server: " + w);
+                if (resp.Relayed > 0) log.Info($"  the website took party progress for {resp.Relayed} crewmate(s)");
                 log.Info($"  uploaded · server has events up to {string.Join(", ", resp.Ack.Select(a => $"{names.GetValueOrDefault(a.Key, a.Key)} #{a.Value}"))}");
                 return new SyncResult(file, save, fresh, null, resp, InboxPath: await WriteInbox(file, client, resp, ct));
             }

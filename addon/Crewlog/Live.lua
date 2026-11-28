@@ -3,7 +3,12 @@
 --   H|guid                              hello: "I'm here, send me your log" (on joining / roster growth)
 --   B|guid|gen|name|level|classId       begin a snapshot
 --   L|guid|gen|rec;rec;...              snapshot chunk; rec = id,ready,h/n:h/n,title
+--   P|guid|gen|map|x|y                  where the sender stands (uiMap, 0-1000 per axis); 0|0|0 when unknown (0.9.0+)
+--   T|guid|gen|id,id,...                quests the sender turned in this session (0.9.0+)
+--   S|guid|gen|ts|sig                   the snapshot signed with the toon's relay key (0.9.0+, only when its owner allows
+--                                       crewmates to relay it; see "Party relay" below)
 --   E|guid|gen                          end: the snapshot replaces the peer's quests (missing ones are gone)
+-- Addons before 0.9.0 ignore P, T and S.
 -- Full snapshots (debounced 1.5 s after a change, plus a 45 s heartbeat) are simpler and more forgiving than
 -- deltas: a lost message is fixed by the next snapshot. Own messages echo back, so peers are keyed by GUID and
 -- our own GUID is ignored. Live data lives in memory only; the server stays the record.
@@ -11,7 +16,7 @@
 -- can whisper an addon message, and a member could claim another's GUID). Received text is shown escaped, and how
 -- much one peer can send and make us send is capped.
 local _, ns = ...
-local U, S = ns.U, ns.Store
+local U, S, Sign = ns.U, ns.Store, ns.Sign
 local Live = {}
 ns.Live = Live
 
@@ -22,11 +27,16 @@ Live.DEBOUNCE = 1.5
 Live.HEARTBEAT = 45
 Live.MAX_QUESTS = 60      -- per peer snapshot (a quest log holds 25)
 Live.HELLO_EVERY = 10     -- seconds: answer hellos (and new peers) at most this often
+Live.MAX_TURNINS = 25     -- turn-ins per snapshot (this session's)
+Live.MAX_OBJECTIVES = 20
+Live.RELAY_KEEP = 12 * 3600  -- seconds a stored snapshot for relaying is kept
+Live.MAX_RELAY = 40       -- snapshots kept for relaying
 Live.peers = {}      -- [guid] = { name, level, classId, quests = { [id] = { title, ready, o = { {h, n}, ... } } }, at }
 Live.listeners = {}  -- functions() called when peer data or the roster changed
 
 local db, myGuid, myName
 local gen = 0
+local turnins = {}   -- quests this toon turned in this session, for T (and its signed snapshot)
 local mySig = ""
 local queue, pumping = {}, false
 local syncPending = false
@@ -94,12 +104,106 @@ function Live.records()
     local q = rec.log[id]
     local objs, ready = {}, true
     for i, o in ipairs(q.o or {}) do
-      objs[i] = (o.h or 0) .. "/" .. (o.n or 0)
+      if i <= Live.MAX_OBJECTIVES then objs[i] = (o.h or 0) .. "/" .. (o.n or 0) end
       if not o.f then ready = false end
     end
     out[#out + 1] = id .. "," .. (ready and "1" or "0") .. "," .. table.concat(objs, ":") .. "," .. clean(q.title):sub(1, 40)
   end
   return out
+end
+
+-- Party relay ---------------------------------------------------------------------------------
+-- A toon's owner can let crewmates' syncs carry the toon's progress to the website while they're grouped (toon page on
+-- the website). The website then puts a secret key for the toon into its owner's Inbox; only that PC has it. Our
+-- snapshots are signed with it, and a crewmate who has "Upload my party's progress" on stores the last signed
+-- snapshot of each party member for their app to upload. The website checks the signature, so a crewmate can pass a
+-- snapshot along but never change or invent one.
+
+--- The signed text of a snapshot: built the same way by the sender (from its own log) and by a receiver (from the
+--- messages), and parsed by the website. quests = { [id] = { ready = bool, o = { {h, n}, ... } } }.
+function Live.canonical(guid, ts, level, pos, quests, done)
+  local ids = {}
+  for id in pairs(quests or {}) do ids[#ids + 1] = id end
+  table.sort(ids)
+  local qs = {}
+  for _, id in ipairs(ids) do
+    local q, objs = quests[id], {}
+    for i, o in ipairs(q.o or {}) do
+      if i <= Live.MAX_OBJECTIVES then objs[i] = (o.h or 0) .. "/" .. (o.n or 0) end
+    end
+    qs[#qs + 1] = id .. "," .. (q.ready and "1" or "0") .. "," .. table.concat(objs, ":")
+  end
+  local t = {}
+  for i, id in ipairs(done or {}) do t[i] = id end
+  table.sort(t)
+  pos = pos or {}
+  return table.concat({ "1", guid, ts, level or 0, pos.map or 0, pos.x or 0, pos.y or 0, table.concat(qs, ";"),
+    table.concat(t, ",") }, "|")
+end
+
+-- Our relay key, from the Inbox (present only while our owner allows relaying).
+function Live.key()
+  local inbox = rawget(_G, "Crewlog_Inbox")
+  local keys = type(inbox) == "table" and type(inbox.relayKeys) == "table" and inbox.relayKeys
+  local k = keys and myGuid and keys[myGuid]
+  return type(k) == "string" and Sign.unhex(k) and k or nil
+end
+
+-- Our position for P: uiMap and 0-1000 per axis, from the collector's last fix.
+local function myPos()
+  local rec = db and myGuid and S.char(db, myGuid)
+  local p = rec and rec.pos
+  if not (p and p.map and p.x and p.y) then return nil end
+  return { map = p.map, x = math.floor(p.x * 10 + 0.5), y = math.floor(p.y * 10 + 0.5) }
+end
+
+-- Our log as the signature sees it.
+local function myQuests()
+  local rec = db and myGuid and S.char(db, myGuid)
+  local out = {}
+  for id, q in pairs((rec and rec.log) or {}) do
+    local ready, o = true, {}
+    for i, x in ipairs(q.o or {}) do
+      o[i] = { h = x.h or 0, n = x.n or 0 }
+      if not x.f then ready = false end
+    end
+    out[id] = { ready = ready, o = o }
+  end
+  return out
+end
+
+function Live.noteTurnIn(qid)
+  for _, id in ipairs(turnins) do if id == qid then return end end
+  turnins[#turnins + 1] = qid
+  while #turnins > Live.MAX_TURNINS do table.remove(turnins, 1) end
+end
+
+function Live.relayOn() return db and db.ui and db.ui.relay == true end
+
+function Live.setRelay(on)
+  db.ui.relay = on or nil
+  if not on then db.relay = nil end
+end
+
+-- Keep a peer's signed snapshot for our app to upload (newest per toon, a bounded number, none too old).
+local function keep(guid, peer, ts, sig, canonical)
+  db.relay = db.relay or {}
+  db.relay[guid] = { s = canonical, sig = sig, name = peer.name, at = U.now(), ts = ts }
+  local n, oldest, oldestAt = 0, nil, math.huge
+  for g, r in pairs(db.relay) do
+    n = n + 1
+    if (r.at or 0) < oldestAt then oldest, oldestAt = g, r.at or 0 end
+  end
+  if n > Live.MAX_RELAY and oldest then db.relay[oldest] = nil end
+end
+
+local function pruneRelay()
+  if type(db.relay) ~= "table" then db.relay = nil return end
+  if not Live.relayOn() then db.relay = nil return end
+  local now = U.now()
+  for g, r in pairs(db.relay) do
+    if type(r) ~= "table" or now - (tonumber(r.at) or 0) > Live.RELAY_KEEP then db.relay[g] = nil end
+  end
 end
 
 function Live.sync()
@@ -117,6 +221,15 @@ function Live.sync()
     cur = cur .. (cur == head and "" or ";") .. r
   end
   if cur ~= head then send(cur) end
+  local pos = myPos()
+  send(table.concat({ "P", myGuid, gen, pos and pos.map or 0, pos and pos.x or 0, pos and pos.y or 0 }, "|"))
+  if #turnins > 0 then send("T|" .. myGuid .. "|" .. gen .. "|" .. table.concat(turnins, ",")) end
+  local key = Live.key()
+  if key then
+    local ts = math.floor(U.now())
+    local sig = Sign.sign(key, Live.canonical(myGuid, ts, level, pos, myQuests(), turnins))
+    if sig then send(table.concat({ "S", myGuid, gen, ts, sig }, "|")) end
+  end
   send("E|" .. myGuid .. "|" .. gen)
 end
 
@@ -202,6 +315,7 @@ function Live.handle(msg, channel, sender)
     if not peer then peer = { quests = {} }; Live.peers[guid] = peer; answer() end
     peer.name, peer.level, peer.classId = shown(name, 24), tonumber(level), tonumber(classId)
     peer.pendingGen, peer.pending, peer.pendingCount = g, {}, 0
+    peer.pendingLevel, peer.pendingPos, peer.pendingDone, peer.pendingSig = tonumber(level), nil, nil, nil
   elseif cmd == "L" then
     local g, body = rest:match("^(%d+)|(.*)$")
     if not (peer and g and peer.pendingGen == g) then return end
@@ -212,9 +326,30 @@ function Live.handle(msg, channel, sender)
         peer.pendingCount = peer.pendingCount + 1
       end
     end
+  elseif cmd == "P" then
+    local g, map, x, y = rest:match("^(%d+)|(%d+)|(%d+)|(%d+)$")
+    if not (peer and g and peer.pendingGen == g) then return end
+    map, x, y = tonumber(map), tonumber(x), tonumber(y)
+    if map > 0 and x <= 1000 and y <= 1000 then peer.pendingPos = { map = map, x = x, y = y } end
+  elseif cmd == "T" then
+    local g, ids = rest:match("^(%d+)|([%d,]*)$")
+    if not (peer and g and peer.pendingGen == g) then return end
+    local done = {}
+    for id in ids:gmatch("%d+") do if #done < Live.MAX_TURNINS then done[#done + 1] = tonumber(id) end end
+    peer.pendingDone = done
+  elseif cmd == "S" then
+    local g, ts, sig = rest:match("^(%d+)|(%d+)|(%x+)$")
+    if not (peer and g and peer.pendingGen == g) or #sig ~= Sign.LENGTH then return end
+    peer.pendingSig = { ts = tonumber(ts), sig = sig:lower() }
   elseif cmd == "E" then
     if not (peer and peer.pendingGen == rest and peer.pending) then return end
     peer.quests, peer.pending, peer.pendingGen = peer.pending, nil, nil
+    peer.pos, peer.done = peer.pendingPos, peer.pendingDone
+    local signed = peer.pendingSig
+    if signed and Live.relayOn() then
+      keep(guid, peer, signed.ts, signed.sig, Live.canonical(guid, signed.ts, peer.pendingLevel, peer.pos, peer.quests, peer.done))
+    end
+    peer.pendingSig = nil
     peer.at = U.now()
     notify()
   end
@@ -383,6 +518,11 @@ function Live.Start(theDb, guid, name)
     Live.stats.prefix = ok and res ~= false and res ~= 2 and res ~= 3 -- 1 = already registered: fine
   end
   Live.listeners[#Live.listeners + 1] = Live.refreshMarkers
+  pruneRelay()
+  if ns.Collector and ns.Collector.listeners then
+    local L = ns.Collector.listeners
+    L[#L + 1] = function(ev) if ev.k == "TURNIN" and ev.c == myGuid then Live.noteTurnIn(ev.q) end end
+  end
   Live.onRoster()
   C_Timer.After(Live.HEARTBEAT, heartbeat)
 end

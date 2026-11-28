@@ -78,6 +78,12 @@ SlashCmdList.CREWLOG = function(msg)
       or "markers off")
     return
   end
+  if msg == "relay" then
+    ns.Live.setRelay(not ns.Live.relayOn())
+    say(ns.Live.relayOn() and "party upload on: your syncs also carry the progress of journal crewmates in your group who allow it on the website"
+      or "party upload off: your syncs carry only your own toons")
+    return
+  end
   if msg == "minimap" then
     UI.SetMinimapShown(db.ui.hideMinimap == true)
     say("minimap button " .. (db.ui.hideMinimap and "hidden (/cl minimap shows it again)" or "shown"))
@@ -98,8 +104,12 @@ SlashCmdList.CREWLOG = function(msg)
   say(string.format("waiting for the client: %d event(s), %d harvested quest(s) · inbox %s",
     evs, harvest, inboxAge and (math.floor(inboxAge / 60) .. " min old") or "not received yet"))
   local live = #ns.Live.list()
-  say(string.format("party: %s · member colours %s · markers %s", ns.Live.channel() and (live .. " with Crewlog, live") or "not in a group",
-    db.ui.colors and "on" or "off", db.ui.markers and "on" or "off"))
+  local relayed = 0
+  for _ in pairs(db.relay or {}) do relayed = relayed + 1 end
+  say(string.format("party: %s · member colours %s · markers %s · party upload %s", ns.Live.channel() and (live .. " with Crewlog, live") or "not in a group",
+    db.ui.colors and "on" or "off", db.ui.markers and "on" or "off",
+    ns.Live.relayOn() and ("on (" .. relayed .. " waiting)") or "off"))
+  say("this toon's progress " .. (ns.Live.key() and "may be uploaded by crewmates (allowed on the website)" or "is uploaded only by you"))
   if ns.Live.channel() or ns.Live.stats.sent > 0 then say(ns.Live.statusLine()) end
-  say("Click the |cffF2C25Bcompass|r on the minimap (or |cffF2C25B/cl sync|r) to sync now; logging out syncs too. |cffF2C25B/cl|r (or right-click) shows your crew, |cffF2C25B/cl next|r what to pick up next. Coordinates copied on the website set a map pin: |cffF2C25B/way Durotar 42.9 69.2|r (or |cffF2C25B/cl way …|r when a waypoint addon owns /way). Optional: |cffF2C25B/cl colors|r (a colour per party member), |cffF2C25B/cl markers|r (icon over their heads). |cffF2C25B/cl minimap|r hides the button.")
+  say("Click the |cffF2C25Bcompass|r on the minimap (or |cffF2C25B/cl sync|r) to sync now; logging out syncs too. |cffF2C25B/cl|r (or right-click) shows your crew, |cffF2C25B/cl next|r what to pick up next. Coordinates copied on the website set a map pin: |cffF2C25B/way Durotar 42.9 69.2|r (or |cffF2C25B/cl way …|r when a waypoint addon owns /way). Optional: |cffF2C25B/cl colors|r (a colour per party member), |cffF2C25B/cl markers|r (icon over their heads), |cffF2C25B/cl relay|r (your syncs also upload crewmates' progress). |cffF2C25B/cl minimap|r hides the button.")
 end

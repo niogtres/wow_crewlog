@@ -85,4 +85,18 @@ public class CrewlogSaveReaderTests
         Assert.Equal(QuestEventKind.Unknown, e.Kind);
         Assert.Equal("SOMETHING_NEW", e.RawKind);
     }
+    [Fact]
+    public void Reads_crewmates_snapshots_kept_for_relaying()
+    {
+        var save = CrewlogSaveReader.Read(SavedVariablesParser.Parse("""
+            CrewlogDB = { schema = 1, installId = "x", relay = {
+              ["Player-1-B"] = { s = "1|Player-1-B|100|5|1411|1|2||", sig = "00112233445566778899aabbccddeeff", name = "Brogg", at = 1700000000, ts = 100 },
+              ["Player-1-C"] = { name = "no text" },
+            } }
+            """));
+        var r = Assert.Single(save.Relayed!);
+        Assert.Equal(("Player-1-B", "1|Player-1-B|100|5|1411|1|2||", "00112233445566778899aabbccddeeff", "Brogg"), (r.Guid, r.Signed, r.Signature, r.Name));
+        Assert.Equal(DateTimeOffset.FromUnixTimeSeconds(1700000000), r.KeptAt);
+        Assert.Null(CrewlogSaveReader.Read(SavedVariablesParser.Parse("CrewlogDB = { schema = 1, installId = \"x\" }")).Relayed);
+    }
 }

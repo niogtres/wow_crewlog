@@ -166,6 +166,14 @@ public static class InboxWriter
                 }
                 sb.AppendLine("  },");
             }
+            if (crew.RelayKeys is { Count: > 0 } keys)
+            {
+                // The keys this PC's own toons sign their live snapshots with, so crewmates can relay them (Live.lua).
+                sb.AppendLine("  relayKeys = {");
+                foreach (var (guid, key) in keys.OrderBy(k => k.Key, StringComparer.Ordinal))
+                    if (key.All(Uri.IsHexDigit)) sb.Append("    [").Append(Str(guid)).Append("] = ").Append(Str(key)).AppendLine(",");
+                sb.AppendLine("  },");
+            }
             if (crew.Next is { Count: > 0 } next)
             {
                 // "Next up" per own toon and zone; the addon shows the zone the player is in.

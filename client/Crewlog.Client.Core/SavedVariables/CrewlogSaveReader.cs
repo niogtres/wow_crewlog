@@ -40,6 +40,13 @@ public static class CrewlogSaveReader
                 if (value.AsTable() is { } h) harvest.Add(ReadHarvest(qid, h));
         harvest.Sort((a, b) => a.QuestId.CompareTo(b.QuestId));
 
+        var relayed = new List<RelayedSnapshot>();
+        if (db["relay"].AsTable() is { } relay)
+            foreach (var (guid, value) in relay.StringKeyed())
+                if (value.AsTable() is { } r && r["s"].AsString() is { } signed && r["sig"].AsString() is { } sig)
+                    relayed.Add(new RelayedSnapshot(guid, signed, sig, r["name"].AsString(), Time(r["at"])));
+        relayed.Sort((a, b) => string.CompareOrdinal(a.Guid, b.Guid));
+
         return new AddonSave(
             schema,
             db["installId"].AsString() ?? "",
@@ -47,7 +54,8 @@ public static class CrewlogSaveReader
             characters.OrderBy(c => c.Guid, StringComparer.Ordinal).ToList(),
             events,
             harvest,
-            db["droppedEvents"].AsLong() ?? 0);
+            db["droppedEvents"].AsLong() ?? 0,
+            relayed.Count > 0 ? relayed : null);
     }
 
     private static CharacterSnapshot ReadCharacter(string guid, LuaTable rec)

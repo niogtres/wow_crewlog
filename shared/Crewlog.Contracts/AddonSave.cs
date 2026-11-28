@@ -18,7 +18,17 @@ public sealed record AddonSave(
     IReadOnlyList<CharacterSnapshot> Characters,
     IReadOnlyList<QuestEvent> Events,
     IReadOnlyList<HarvestedQuest> Harvest,
-    long DroppedEvents);
+    long DroppedEvents,
+    IReadOnlyList<RelayedSnapshot>? Relayed = null);
+
+/// <summary>
+/// A party member's live snapshot that this PC's addon kept for relaying (addon 0.9.0+, "Upload my party's progress";
+/// DESIGN §5.4 Party relay). Signed is the text the member's own addon signed:
+/// <c>1|guid|unixTime|level|uiMap|x|y|id,ready,have/need:have/need;...|turnedIn,turnedIn</c> (x and y 0–1000, 0 when
+/// unknown); Signature is the first 32 hex digits of HMAC-SHA256 over it with that toon's relay key, which only its
+/// owner's PC and the server know. The server checks the signature, so a relaying PC can't change what it carries.
+/// </summary>
+public sealed record RelayedSnapshot(string Guid, string Signed, string Signature, string? Name, DateTimeOffset? KeptAt);
 
 /// <summary>A character's current state. Identity is the player GUID (Forever returns an empty realm name).
 /// Pos* (addon 0.8.6+): where the toon stood when the game last saved, zone map id and 0–100 coordinates.

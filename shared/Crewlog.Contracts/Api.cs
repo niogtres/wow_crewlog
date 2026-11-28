@@ -51,7 +51,8 @@ public sealed record SyncResponse(
     IReadOnlyDictionary<string, long> Ack,
     long? HarvestAck,
     DateTimeOffset ServerTime,
-    IReadOnlyList<string> Warnings);
+    IReadOnlyList<string> Warnings,
+    int Relayed = 0);
 
 public sealed record MeResponse(string UserName, string? AvatarUrl, IReadOnlyList<string> Characters);
 
@@ -83,8 +84,10 @@ public sealed record JournalInfo(Guid Id, string Title, string OwnerName, bool I
 /// What the client writes into the Crewlog_Inbox addon (DESIGN §5): acks so the addon can prune, plus the journal
 /// crew's current quests for the in-game crew view.
 /// </summary>
+/// <remarks>RelayKeys (0.9.0+): per own toon whose owner lets crewmates relay its progress, the hex key its addon signs
+/// live snapshots with. Only sent to the owner's own PCs.</remarks>
 public sealed record InboxResponse(DateTimeOffset GeneratedAt, IReadOnlyList<InboxJournal> Journals, IReadOnlyList<InboxNext>? Next = null,
-    IReadOnlyList<InboxToonRoute>? Routes = null);
+    IReadOnlyList<InboxToonRoute>? Routes = null, IReadOnlyDictionary<string, string>? RelayKeys = null);
 
 /// <summary>A toon's own route ("Just me" in game): its quests and pick-ups, the website's toon page map.</summary>
 public sealed record InboxToonRoute(string Guid, InboxRoute Route);

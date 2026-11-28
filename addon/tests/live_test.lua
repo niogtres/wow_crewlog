@@ -14,7 +14,7 @@ H.addQuest(789, "Sting of the Scorpid", 3, { { 4, 10, false, "item", "Scorpid Wo
 H.addQuest(4641, "Your Place In The World", 1, {})
 CrewlogDB = nil
 
-local ns = H.load("Crewlog", { "Util.lua", "Store.lua", "Harvest.lua", "Collector.lua", "Live.lua", "Crew.lua", "Next.lua", "Tooltips.lua", "Way.lua", "Route.lua", "UI.lua", "Core.lua" })
+local ns = H.load("Crewlog", { "Util.lua", "Sign.lua", "Store.lua", "Harvest.lua", "Collector.lua", "Live.lua", "Crew.lua", "Next.lua", "Tooltips.lua", "Way.lua", "Route.lua", "UI.lua", "Core.lua" })
 local Live = ns.Live
 H.fire("ADDON_LOADED", "Crewlog")
 H.fire("PLAYER_LOGIN")
@@ -46,7 +46,7 @@ check(#H.sent == 0, "no addon messages outside a group")
 H.group.members = { { BOB, "Brogg" } }
 H.fire("GROUP_ROSTER_UPDATE")
 H.advance(3)
-check(kinds(H.sent) == "HBLE", "join sends hello + B/L/E snapshot, got " .. kinds(H.sent))
+check(kinds(H.sent) == "HBLPE", "join sends hello + B/L/P/E snapshot, got " .. kinds(H.sent))
 local okLen, okPrefix = true, true
 for _, m in ipairs(H.sent) do
   if #m.msg > 250 then okLen = false end
@@ -69,7 +69,7 @@ check(bob and bob.name == "Zarnokk" and bob.level == 1 and bob.classId == 4, "pe
 check(bob and bob.quests[789] and bob.quests[789].o[1].h == 4 and bob.quests[789].o[1].n == 10 and bob.quests[789].title == "Sting of the Scorpid", "objective counts decoded")
 check(bob and bob.quests[4641] and bob.quests[4641].ready, "ready flag decoded")
 H.advance(3)
-check(kinds(H.sent):find("BLE"), "a new peer gets our snapshot back")
+check(kinds(H.sent):find("BLPE"), "a new peer gets our snapshot back")
 H.sent = {}
 
 -- 5. A snapshot only counts once it is complete; quests missing from it are dropped.

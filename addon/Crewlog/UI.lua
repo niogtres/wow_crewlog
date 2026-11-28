@@ -85,6 +85,13 @@ function UI.MenuItems()
         local ok, why = Live.setMarkers(not db.ui.markers)
         if not ok then say("can't change markers " .. why) end
       end },
+    { text = "Upload my party's progress", hint = "your syncs carry crewmates' progress to the website, for those who allow it",
+      isOn = function() return Live.relayOn() == true end,
+      run = function()
+        Live.setRelay(not Live.relayOn())
+        say(Live.relayOn() and "your syncs now also upload the progress of journal crewmates in your group who allow it (/cl relay turns it off)."
+          or "party upload off: your syncs carry only your own toons.")
+      end },
     { text = "Hide minimap button", hint = "/cl minimap brings it back", run = function()
         UI.SetMinimapShown(false)
         say("minimap button hidden. |cffF2C25B/cl minimap|r shows it again.")
