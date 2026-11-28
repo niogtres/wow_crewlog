@@ -107,11 +107,24 @@ function CrewlogRoutePinMixin:OnLoad()
   self:SetScript("OnLeave", self.OnMouseLeave)
 end
 
--- Above every other pin on the map (quest markers, other addons' pins), so the numbers can always be read: a fixed
--- level over the map canvas instead of one of the map's own pin layers.
+-- Above every other pin on the map (the game's quest markers, other addons' pins), so the numbers can always be read:
+-- one frame strata above the map's own (those markers sit in a higher layer than any frame level reaches) and a
+-- high level within it.
+local STRATA = { "BACKGROUND", "LOW", "MEDIUM", "HIGH", "DIALOG", "FULLSCREEN", "FULLSCREEN_DIALOG" }
 local ON_TOP = 2000
+
+--- The strata one above the given one (FULLSCREEN_DIALOG at most, never TOOLTIP).
+function Route.strataAbove(strata)
+  for i, s in ipairs(STRATA) do
+    if s == strata then return STRATA[math.min(i + 1, #STRATA)] end
+  end
+  return "DIALOG"
+end
+
 function CrewlogRoutePinMixin:ApplyFrameLevel()
   local canvas = self:GetParent()
+  local map = WorldMapFrame
+  if self.SetFrameStrata and map and map.GetFrameStrata then self:SetFrameStrata(Route.strataAbove(map:GetFrameStrata())) end
   local base = canvas and canvas.GetFrameLevel and canvas:GetFrameLevel() or 0
   self:SetFrameLevel(math.min(base + ON_TOP, 9000))
 end
@@ -139,10 +152,10 @@ function CrewlogRoutePinMixin:OnMouseLeave() GameTooltip:Hide() end
 
 -- The provider: pins for the stops, lines between them on the map canvas (so they zoom with it). -------------------
 
-local lines = {}
+local lines = {}   -- { casing, core } per segment
 
 local function hideLines()
-  for _, l in ipairs(lines) do l:Hide() end
+  for _, pair in ipairs(lines) do pair[1]:Hide(); pair[2]:Hide() end
 end
 
 local function clamp(v) return math.max(0, math.min(100, tonumber(v) or 0)) end
@@ -171,17 +184,24 @@ local function drawLines(map, stops)
   local canvas = map:GetCanvas()
   local w, h = canvas:GetWidth(), canvas:GetHeight()
   if not canvas.CreateLine or w == 0 then return end
+  -- A dark line on a black casing: it stands out on the map's yellow and tan.
   for i, seg in ipairs(Route.segments(stops)) do
-    local l = lines[i]
-    if not l or l:GetParent() ~= canvas then
-      l = canvas:CreateLine(nil, "ARTWORK")
-      l:SetThickness(3)
-      l:SetColorTexture(0.89, 0.64, 0.10, 0.75)
-      lines[i] = l
+    local pair = lines[i]
+    if not pair or pair[1]:GetParent() ~= canvas then
+      local casing = canvas:CreateLine(nil, "ARTWORK", nil, 1)
+      casing:SetThickness(6)
+      casing:SetColorTexture(0.04, 0.03, 0.02, 0.85)
+      local core = canvas:CreateLine(nil, "ARTWORK", nil, 2)
+      core:SetThickness(3)
+      core:SetColorTexture(0.55, 0.22, 0.04, 1)
+      pair = { casing, core }
+      lines[i] = pair
     end
-    l:SetStartPoint("TOPLEFT", canvas, seg[1] / 100 * w, -seg[2] / 100 * h)
-    l:SetEndPoint("TOPLEFT", canvas, seg[3] / 100 * w, -seg[4] / 100 * h)
-    l:Show()
+    for _, l in ipairs(pair) do
+      l:SetStartPoint("TOPLEFT", canvas, seg[1] / 100 * w, -seg[2] / 100 * h)
+      l:SetEndPoint("TOPLEFT", canvas, seg[3] / 100 * w, -seg[4] / 100 * h)
+      l:Show()
+    end
   end
 end
 

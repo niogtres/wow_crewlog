@@ -179,6 +179,8 @@ check(#segs == 5, "two walked bits, a flight, a straight leg and a clamped one: 
 check(segs[1][3] == 20 and segs[1][4] == 15 and segs[3][1] == 12, "path points in order")
 check(segs[4][1] == 30 and segs[4][2] == 10 and segs[4][4] == 40, "no path: straight from the stop before")
 check(segs[5][3] == 100, "a point off the map is kept on its edge")
+check(ns.Route.strataAbove("HIGH") == "DIALOG" and ns.Route.strataAbove("FULLSCREEN_DIALOG") == "FULLSCREEN_DIALOG"
+  and ns.Route.strataAbove(nil) == "DIALOG", "route pins go one layer above the map, never over tooltips")
 
 GameTooltip.lines = {}
 ns.UI.Tooltip(GameTooltip)
