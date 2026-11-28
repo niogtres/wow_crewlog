@@ -2,6 +2,10 @@
 
 What changed in the Crewlog app and addon, newest first.
 
+## 0.9.1 — 2026-11-28
+- App and addon: the route on the in-game map follows the ground like the website's, around cliffs, mountains and water, with flights as straight lines; its numbered stops sit on top of every other map marker.
+- App: the in-game data (your own route, Next up, the crew) stays fresh while you play: the app rewrites it as soon as anything changes on the website and at least every 10 minutes, so a /reload always picks up close-to-current data.
+
 ## 0.9.0 — 2026-11-28
 - Website and addon: one crewmate can sync for the group. While you're grouped, a journal crewmate's sync can also carry your toon's current quests, progress, turn-ins, level and position to the website, so it stays up to date without everyone clicking the compass. Both sides opt in: you allow it in your toon's settings on the website, and the crewmate turns on "Upload my party's progress" in the compass menu (or /cl relay). Your addon signs what it shares with a key only your PC and the website know, so nothing can be changed or made up on the way, and only crewmates in a journal you share can carry it. The website shows it as "synced … via <name>", and your own next sync replaces it.
 - Addon: party members' addons now also share where each of you stands and the quests you turned in this session.
