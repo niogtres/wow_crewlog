@@ -2,6 +2,9 @@
 
 What changed in the Crewlog app and addon, newest first.
 
+## 0.9.2 — 2026-11-28
+- Addon: the route on the in-game map is drawn darker, a deep amber line on a black edge, and its numbered stops now really sit above the game's own quest markers.
+
 ## 0.9.1 — 2026-11-28
 - App and addon: the route on the in-game map follows the ground like the website's, around cliffs, mountains and water, with flights as straight lines; its numbered stops sit on top of every other map marker.
 - App: the in-game data (your own route, Next up, the crew) stays fresh while you play: the app rewrites it as soon as anything changes on the website and at least every 10 minutes, so a /reload always picks up close-to-current data.
