@@ -2,6 +2,9 @@
 
 What changed in the Crewlog app and addon, newest first.
 
+## 0.9.3 — 2026-11-28
+- Addon: the route's numbered stops are drawn in the map's topmost pin layer, above the game's quest markers, also after zooming and panning.
+
 ## 0.9.2 — 2026-11-28
 - Addon: the route on the in-game map is drawn darker, a deep amber line on a black edge, and its numbered stops now really sit above the game's own quest markers.
 
