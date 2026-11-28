@@ -2,6 +2,10 @@
 
 What changed in the Crewlog app and addon, newest first.
 
+## 0.9.4 — 2026-11-28
+- Addon: the route on the in-game map shows three stops at a time, each with the way there along the ground: green to the next stop, blue to the one after, grey to the third. "Next 3 stops" in the compass menu's Route on map brings up the three after them.
+- Addon: an arrow on screen points to the route's next stop, with its name and distance in yards. Reach the stop and it moves on to the next; after the third the next three come up by themselves. Drag it where you like it, right-click to skip a stop, or turn it off with "Arrow to the next stop" in the same menu.
+
 ## 0.9.3 — 2026-11-28
 - Addon: the route's numbered stops are drawn in the map's topmost pin layer, above the game's quest markers, also after zooming and panning.
 
